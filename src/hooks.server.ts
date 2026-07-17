@@ -6,8 +6,8 @@ import { getConfig } from '$lib/server/env';
 import { startLimiterPruning } from '$lib/server/limiters';
 import { SESSION_COOKIE, verifySessionValue } from '$lib/server/session';
 
-/** Diese Pfade sind ohne Haus-Passwort erreichbar. */
-const PUBLIC_PATHS = new Set(['/login', '/healthz', '/datenschutz']);
+/** Diese Pfade sind ohne Haus-Passwort erreichbar (kalender.ics prüft ein eigenes Token). */
+const PUBLIC_PATHS = new Set(['/login', '/healthz', '/datenschutz', '/kalender.ics']);
 
 if (!building) {
 	// Fail fast beim Start: ENV prüfen, DB öffnen und migrieren.

@@ -82,6 +82,11 @@
 	02:00).
 </p>
 
+<p class="quiet-hours">
+	🌙 Ab 22 Uhr gilt im Haus Ruhezeit – feiern ist okay, aber bitte denkt drinnen wie draußen an die
+	Nachbarn.
+</p>
+
 <div class="field-row">
 	<div class="field">
 		<label for="name">Dein Name *</label>
@@ -178,6 +183,13 @@
 	.field-hint {
 		font-size: var(--text-sm);
 		color: var(--color-text-soft);
+	}
+
+	.quiet-hours {
+		font-size: var(--text-sm);
+		background: var(--color-accent-soft);
+		border-radius: var(--radius-sm);
+		padding: var(--space-2) var(--space-3);
 	}
 
 	.toggle-field .toggle-label {

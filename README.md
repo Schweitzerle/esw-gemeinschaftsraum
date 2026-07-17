@@ -101,6 +101,10 @@ CI (GitHub Actions) fährt lint → check → unit → build und die E2E-Suite b
   Kein Tracking, keine externen CDNs/Fonts, ein einziges (Login-)Cookie. Details:
   `/datenschutz`.
 - **Rate-Limits** (in-memory): Login 10 Versuche / 15 min pro IP, Schreibaktionen 30 / min.
+- **Extras:** „Jetzt gerade"-Banner (läuft etwas? wann ist der Raum wieder frei?),
+  Monatsübersicht unter `/monat`, Ruhezeiten-Hinweis im Formular und ein read-only
+  **Kalender-Abo** (`/kalender.ics?token=…`, Link auf der Wochenansicht — enthält nur
+  Titel und Zeiten, keine Kontaktdaten). Hell- und Dunkel-Theme folgen dem System.
 
 ## Offene Punkte
 

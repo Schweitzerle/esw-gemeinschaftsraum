@@ -37,3 +37,6 @@ playwright-report
 
 # Coverage
 coverage
+
+# Playwright Auth-State
+playwright/.auth

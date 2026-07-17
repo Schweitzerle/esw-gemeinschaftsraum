@@ -110,4 +110,50 @@ export function shiftDate(date: string, days: number): string {
 	return format(addDays(noon, days), 'yyyy-MM-dd');
 }
 
+export interface MonthDay extends DayInfo {
+	/** Tag im Monat (1–31) */
+	dayOfMonth: number;
+	/** Gehört der Tag zum angezeigten Monat? */
+	inMonth: boolean;
+}
+
+/** Kalendergitter des Monats: Wochen (Mo–So) mit Rand-Tagen der Nachbarmonate. */
+export function monthGrid(date: string): MonthDay[][] {
+	const [year, month] = parseDateParts(date);
+	const firstOfMonth = new TZDate(year, month - 1, 1, 12, 0, TIME_ZONE);
+	const gridStart = startOfWeek(firstOfMonth, { weekStartsOn: 1 });
+
+	const weeks: MonthDay[][] = [];
+	let cursor = gridStart;
+	do {
+		const week: MonthDay[] = [];
+		for (let i = 0; i < 7; i++) {
+			const dayDate = format(cursor, 'yyyy-MM-dd');
+			const nextDate = format(addDays(cursor, 1), 'yyyy-MM-dd');
+			week.push({
+				date: dayDate,
+				startMs: berlinDateTimeToMs(dayDate, '00:00'),
+				endMs: berlinDateTimeToMs(nextDate, '00:00'),
+				dayOfMonth: cursor.getDate(),
+				inMonth: cursor.getMonth() === month - 1
+			});
+			cursor = addDays(cursor, 1);
+		}
+		weeks.push(week);
+	} while (cursor.getMonth() === month - 1);
+	return weeks;
+}
+
+/** „Juli 2026" */
+export function monthLabel(date: string): string {
+	const [year, month] = parseDateParts(date);
+	return format(new TZDate(year, month - 1, 1, 12, 0, TIME_ZONE), 'MMMM yyyy', { locale: de });
+}
+
+/** Erster Tag des um n Monate verschobenen Monats (für Monats-Navigation). */
+export function shiftMonth(date: string, months: number): string {
+	const [year, month] = parseDateParts(date);
+	return format(new TZDate(year, month - 1 + months, 1, 12, 0, TIME_ZONE), 'yyyy-MM-dd');
+}
+
 export { DAY_MS };

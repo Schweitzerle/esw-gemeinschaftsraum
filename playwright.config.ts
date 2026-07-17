@@ -14,8 +14,21 @@ export default defineConfig({
 	workers: 1,
 	use: { baseURL: 'http://localhost:4173' },
 	projects: [
-		{ name: 'mobil', use: { ...devices['iPhone 13'], defaultBrowserType: 'chromium' } },
-		{ name: 'desktop', use: { ...devices['Desktop Chrome'] } }
+		{ name: 'setup', testMatch: '**/auth.setup.ts' },
+		{
+			name: 'mobil',
+			use: {
+				...devices['iPhone 13'],
+				defaultBrowserType: 'chromium',
+				storageState: 'playwright/.auth/state.json'
+			},
+			dependencies: ['setup']
+		},
+		{
+			name: 'desktop',
+			use: { ...devices['Desktop Chrome'], storageState: 'playwright/.auth/state.json' },
+			dependencies: ['setup']
+		}
 	],
 	webServer: {
 		command: 'npm run build && npm run preview',

@@ -13,14 +13,6 @@ async function hydrated(page: Page): Promise<void> {
 	await page.waitForSelector('body[data-hydrated]', { state: 'attached' });
 }
 
-async function login(page: Page): Promise<void> {
-	await page.goto('/login');
-	await hydrated(page);
-	await page.fill('#passwort', PASSWORT);
-	await page.click('button[type=submit]');
-	await page.waitForURL('/');
-}
-
 interface BookingFormData {
 	title: string;
 	date: string;
@@ -43,29 +35,33 @@ async function fillBookingForm(page: Page, data: BookingFormData): Promise<void>
 
 test.describe.configure({ mode: 'serial' });
 
-test('leitet ohne Anmeldung zum Login um', async ({ page }) => {
-	await page.goto('/');
-	await expect(page).toHaveURL(/\/login/);
-	await expect(page.locator('h1')).toContainText('Gemeinschaftsraum');
-});
+test.describe('ohne Anmeldung', () => {
+	test.use({ storageState: { cookies: [], origins: [] } });
 
-test('healthz ist ohne Anmeldung erreichbar', async ({ request }) => {
-	const res = await request.get('/healthz');
-	expect(res.status()).toBe(200);
-	expect(await res.json()).toEqual({ status: 'ok' });
-});
+	test('leitet ohne Anmeldung zum Login um', async ({ page }) => {
+		await page.goto('/');
+		await expect(page).toHaveURL(/\/login/);
+		await expect(page.locator('h1')).toContainText('Gemeinschaftsraum');
+	});
 
-test('Datenschutz ist ohne Anmeldung erreichbar', async ({ page }) => {
-	await page.goto('/datenschutz');
-	await expect(page.locator('h1')).toContainText('Datenschutz');
-});
+	test('healthz ist ohne Anmeldung erreichbar', async ({ request }) => {
+		const res = await request.get('/healthz');
+		expect(res.status()).toBe(200);
+		expect(await res.json()).toEqual({ status: 'ok' });
+	});
 
-test('falsches Passwort zeigt Fehlermeldung', async ({ page }) => {
-	await page.goto('/login');
-	await hydrated(page);
-	await page.fill('#passwort', 'voellig-falsch');
-	await page.click('button[type=submit]');
-	await expect(page.locator('.form-error')).toContainText('stimmt leider nicht');
+	test('Datenschutz ist ohne Anmeldung erreichbar', async ({ page }) => {
+		await page.goto('/datenschutz');
+		await expect(page.locator('h1')).toContainText('Datenschutz');
+	});
+
+	test('falsches Passwort zeigt Fehlermeldung', async ({ page }) => {
+		await page.goto('/login');
+		await hydrated(page);
+		await page.fill('#passwort', 'voellig-falsch');
+		await page.click('button[type=submit]');
+		await expect(page.locator('.form-error')).toContainText('stimmt leider nicht');
+	});
 });
 
 test('kompletter Ablauf: anlegen → Übersicht → Detail → bearbeiten → löschen', async ({
@@ -74,9 +70,8 @@ test('kompletter Ablauf: anlegen → Übersicht → Detail → bearbeiten → l�
 	const date = inDays(3);
 	const title = `E2E-Feier ${testInfo.project.name}`;
 
-	await login(page);
-
-	// Anlegen
+	// Anlegen (Session kommt aus dem Setup-Projekt)
+	await page.goto('/');
 	await page.click('a[href="/neu"]');
 	await page.waitForURL('**/neu');
 	await hydrated(page);
@@ -147,7 +142,11 @@ test('kompletter Ablauf: anlegen → Übersicht → Detail → bearbeiten → l�
 });
 
 test('funktioniert ohne JavaScript (Progressive Enhancement)', async ({ browser }, testInfo) => {
-	const ctx = await browser.newContext({ javaScriptEnabled: false });
+	// Eigener Context ohne JS und ohne die geteilte Session — der Login läuft hier mit
+	const ctx = await browser.newContext({
+		javaScriptEnabled: false,
+		storageState: { cookies: [], origins: [] }
+	});
 	const page = await ctx.newPage();
 	const title = `NoJS-Treffen ${testInfo.project.name}`;
 	// Pro Projekt ein eigener Tag, damit sich die Durchläufe nicht überlappen

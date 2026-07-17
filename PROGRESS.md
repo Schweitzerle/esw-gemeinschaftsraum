@@ -28,13 +28,12 @@ Anforderungen: siehe lokale `PROMPT.md` (nicht im Repo) bzw. README.
 - [x] Playwright-E2E: 16 Tests (mobil+desktop, No-JS-Flow, axe-A11y) — alle grün
 - [x] Prod-Smoke mit `node build` (Gate, Login, CSP, ENV-Abbruch geprüft)
 - [x] README-Betriebsanleitung, Dockerfile + compose.yml, Screenshots in docs/
-- [ ] Phase 2: Jetzt-Banner + „Frei bis", Ruhezeiten-Hinweis, Monatsübersicht, ICS-Feed — Task 9
+- [x] Phase 2: Jetzt-Banner + „Frei bis", Ruhezeiten-Hinweis, Monatsübersicht `/monat`, ICS-Feed `/kalender.ics?token=…` (Token = HMAC aus SESSION_SECRET) — E2E: 25 Tests grün
 - [ ] Abschluss: CLAUDE.md (/init), Bericht + WhatsApp-Text — Task 10
 
 ## Nächste Schritte
 
-1. Phase 2 (Reihenfolge: Jetzt-Banner → Ruhezeiten-Hinweis → Monatsübersicht → ICS-Feed)
-2. /init für CLAUDE.md, Abschlussbericht
+1. /init für CLAUDE.md, Abschlussbericht + WhatsApp-Text an den Hoster
 
 ## Gotchas
 
@@ -44,3 +43,4 @@ Anforderungen: siehe lokale `PROMPT.md` (nicht im Repo) bzw. README.
 - `curl` ohne `Accept: text/html` bekommt von Form-Actions JSON statt 303 — normal.
 - Drizzle-Config und App lesen `DATABASE_PATH` (nicht DATABASE_URL).
 - Hinter Reverse Proxy muss `ORIGIN` gesetzt sein, sonst schlägt der CSRF-Schutz fehl.
+- E2E nutzt ein Setup-Projekt + storageState (ein Login pro Lauf); `browser.newContext()` erbt die `use`-Optionen inkl. storageState — für Nicht-eingeloggt-Tests explizit `storageState: { cookies: [], origins: [] }` setzen.
