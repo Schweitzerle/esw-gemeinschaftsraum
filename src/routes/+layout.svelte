@@ -1,6 +1,6 @@
 <script lang="ts">
-	import '@fontsource-variable/fraunces';
-	import '@fontsource-variable/nunito-sans';
+	import '@fontsource-variable/fraunces/index.css';
+	import '@fontsource-variable/nunito-sans/index.css';
 	import '../app.css';
 	import { page } from '$app/state';
 
