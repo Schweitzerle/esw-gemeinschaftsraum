@@ -34,8 +34,9 @@ export default defineConfig(
 		}
 	},
 	{
-		// Override or add rule settings here, such as:
-		// 'svelte/button-has-type': 'error'
-		rules: {}
+		rules: {
+			// Die App läuft ohne Base-Path; resolve() für jeden Link wäre nur Rauschen.
+			'svelte/no-navigation-without-resolve': 'off'
+		}
 	}
 );
