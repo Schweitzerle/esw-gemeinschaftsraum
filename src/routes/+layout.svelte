@@ -7,6 +7,11 @@
 	let { children } = $props();
 
 	const isLoginPage = $derived(page.url.pathname === '/login');
+
+	// Marker für E2E-Tests: erst nach der Hydration in Formulare tippen
+	$effect(() => {
+		document.body.dataset.hydrated = 'true';
+	});
 </script>
 
 <svelte:head>
