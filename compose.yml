@@ -1,0 +1,18 @@
+# Angebot an den Hoster – Packaging gern auch anders, die App braucht nur:
+# `node build` + die ENV-Variablen aus .env.example
+services:
+  gemeinschaftsraum:
+    build: .
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      HAUS_PASSWORT: ${HAUS_PASSWORT:?siehe .env.example}
+      SESSION_SECRET: ${SESSION_SECRET:?siehe .env.example}
+      DATABASE_PATH: data/gemeinschaftsraum.db
+      ORIGIN: ${ORIGIN:?z. B. https://gemeinschaftsraum.example.de}
+    volumes:
+      - gemeinschaftsraum-data:/app/data
+
+volumes:
+  gemeinschaftsraum-data:
