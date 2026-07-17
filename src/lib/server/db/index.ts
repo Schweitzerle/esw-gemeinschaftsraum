@@ -1,10 +1,18 @@
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import Database from 'better-sqlite3';
-import * as schema from './schema';
-import { env } from '$env/dynamic/private';
+import { mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
+import { getConfig } from '../env';
+import { createDb, type AppDb } from './create-db';
 
-if (!env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
+let instance: AppDb | undefined;
 
-const client = new Database(env.DATABASE_URL);
-
-export const db = drizzle(client, { schema });
+/** App-weite Datenbank-Instanz (lazy, damit `vite build` keine DB anlegt). */
+export function getDb(): AppDb {
+	if (!instance) {
+		const { databasePath } = getConfig();
+		if (databasePath !== ':memory:') {
+			mkdirSync(dirname(databasePath), { recursive: true });
+		}
+		instance = createDb(databasePath);
+	}
+	return instance;
+}

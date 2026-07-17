@@ -34,3 +34,6 @@ data/
 
 # Playwright
 playwright-report
+
+# Coverage
+coverage
