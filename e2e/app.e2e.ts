@@ -15,21 +15,18 @@ async function hydrated(page: Page): Promise<void> {
 
 interface BookingFormData {
 	title: string;
-	date: string;
 	startTime: string;
 	endTime: string;
 	name: string;
-	room: string;
 	contact: string;
 }
 
+/** Füllt alle Felder außer dem Datum (das kommt aus dem Tag-Klick bzw. Vorbelegung). */
 async function fillBookingForm(page: Page, data: BookingFormData): Promise<void> {
 	await page.fill('#title', data.title);
-	await page.fill('#date', data.date);
-	await page.fill('#startTime', data.startTime);
-	await page.fill('#endTime', data.endTime);
+	await page.selectOption('#startTime', data.startTime);
+	await page.selectOption('#endTime', data.endTime);
 	await page.fill('#name', data.name);
-	await page.fill('#room', data.room);
 	await page.fill('#contact', data.contact);
 }
 
@@ -70,21 +67,21 @@ test('kompletter Ablauf: anlegen → Übersicht → Detail → bearbeiten → l�
 	const date = inDays(3);
 	const title = `E2E-Feier ${testInfo.project.name}`;
 
-	// Anlegen über den Dialog (Session kommt aus dem Setup-Projekt)
-	await page.goto('/');
+	// Anlegen: Klick auf den freien Tag öffnet den Dialog mit vorbelegtem Datum
+	// (erst zum Zielmonat navigieren, damit die Zelle sicher im Gitter liegt)
+	await page.goto(`/?tag=${date}`);
 	await hydrated(page);
-	await page.click('.header-cta');
+	await page.click(`.month a[href="/?tag=${date}"]`);
 	await expect(page.locator('dialog[open]')).toBeVisible();
+	await expect(page.locator('dialog input[name="date"]')).toHaveValue(date);
 	await fillBookingForm(page, {
 		title,
-		date,
 		startTime: '18:00',
 		endTime: '21:00',
 		name: 'E2E-Testerin',
-		room: '404',
 		contact: '0151 5555555'
 	});
-	await page.check('#isPublic');
+	await page.check('#isPublic', { force: true });
 	await page.click('dialog button[type=submit]');
 
 	// Erfolgsseite mit Edit-Link
@@ -95,30 +92,29 @@ test('kompletter Ablauf: anlegen → Übersicht → Detail → bearbeiten → l�
 
 	// Im Tages-Panel der Übersicht sichtbar
 	await page.goto(`/?tag=${date}`);
+	await hydrated(page);
 	await expect(page.locator('.booking-card', { hasText: title })).toBeVisible();
 
-	// Detailansicht zeigt Kontakt und Zimmer
+	// Detail-Dialog zeigt Kontakt (Shallow Routing, URL wechselt mit)
 	await page.locator('.booking-card', { hasText: title }).click();
-	await page.waitForURL('**/eintrag/*');
-	await expect(page.locator('article')).toContainText('0151 5555555');
-	await expect(page.locator('article')).toContainText('404');
-	await expect(page.locator('article')).toContainText('komm gern dazu');
+	await expect(page.locator('dialog[open]')).toContainText('0151 5555555');
+	await expect(page.locator('dialog[open]')).toContainText('komm gern dazu');
+	await expect(page).toHaveURL(/\/eintrag\/\d+/);
+	await page.goBack();
+	await expect(page.locator('dialog[open]')).toHaveCount(0);
 
-	// Überlappung wird verhindert (Dialog bleibt offen und zeigt den Konflikt)
-	await page.goto(`/?tag=${date}`);
-	await hydrated(page);
+	// Überlappung wird verhindert (Dialog bleibt offen, Konflikt als Toast + Meldung)
 	await page.click('.day-panel .button');
 	await expect(page.locator('dialog[open]')).toBeVisible();
 	await fillBookingForm(page, {
 		title: 'Kollision',
-		date,
 		startTime: '20:00',
 		endTime: '23:00',
 		name: 'Zweite',
-		room: '1',
 		contact: '0000000'
 	});
 	await page.click('dialog button[type=submit]');
+	await expect(page.locator('.toast-error')).toContainText(title);
 	await expect(page.locator('dialog .form-error')).toContainText(title);
 
 	// Bearbeiten über den geheimen Link
@@ -160,13 +156,13 @@ test('funktioniert ohne JavaScript (Progressive Enhancement)', async ({ browser 
 	await page.waitForURL('/');
 
 	await page.goto('/neu');
+	// Ohne JS bleibt das native Datumsfeld stehen
+	await page.fill('#date', date);
 	await fillBookingForm(page, {
 		title,
-		date,
 		startTime: '09:00',
 		endTime: '10:00',
 		name: 'NoJS',
-		room: '2',
 		contact: '0151 999'
 	});
 	await page.click('main button[type=submit]');

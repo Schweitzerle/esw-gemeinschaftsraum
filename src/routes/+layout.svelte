@@ -5,14 +5,19 @@
 	import { setContext } from 'svelte';
 	import { page } from '$app/state';
 	import BookingDialog from '$lib/components/BookingDialog.svelte';
+	import IcsDialog from '$lib/components/IcsDialog.svelte';
+	import Toasts from '$lib/components/Toasts.svelte';
 	import { todayInBerlin } from '$lib/time';
+	import type { LayoutData } from './$types';
 
-	let { children } = $props();
+	let { children, data }: { children: import('svelte').Snippet; data: LayoutData } = $props();
 
 	const isLoginPage = $derived(page.url.pathname === '/login');
+	const icsUrl = $derived(data.icsPath ? new URL(data.icsPath, page.url.origin).href : null);
 
 	// Seiten (z. B. der Kalender) öffnen den Eintragen-Dialog über diesen Context
 	let dialog = $state<BookingDialog>();
+	let icsDialog = $state<IcsDialog>();
 	setContext('booking-dialog', {
 		open: (date: string) => dialog?.open(date)
 	});
@@ -36,16 +41,29 @@
 				<span class="site-logo" aria-hidden="true">🛋️</span>
 				<span>Gemeinschaftsraum</span>
 			</a>
-			<a
-				href="/neu"
-				class="button header-cta"
-				onclick={(e) => {
-					e.preventDefault();
-					dialog?.open(todayInBerlin());
-				}}
-			>
-				+ Eintragen
-			</a>
+			<div class="header-actions">
+				{#if icsUrl}
+					<button
+						type="button"
+						class="button-quiet ics-button"
+						onclick={() => icsDialog?.open()}
+						aria-label="Kalender-Abo"
+						title="Belegungen im Handy-Kalender abonnieren"
+					>
+						📅
+					</button>
+				{/if}
+				<a
+					href="/neu"
+					class="button header-cta"
+					onclick={(e) => {
+						e.preventDefault();
+						dialog?.open(todayInBerlin());
+					}}
+				>
+					+ Eintragen
+				</a>
+			</div>
 		</header>
 
 		<main class="site-main">
@@ -59,7 +77,12 @@
 	</div>
 
 	<BookingDialog bind:this={dialog} />
+	{#if icsUrl}
+		<IcsDialog bind:this={icsDialog} {icsUrl} />
+	{/if}
 {/if}
+
+<Toasts />
 
 <style>
 	.shell {
@@ -94,8 +117,16 @@
 		font-size: 1.5em;
 	}
 
-	.header-cta {
+	.header-actions {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
 		flex-shrink: 0;
+	}
+
+	.ics-button {
+		padding-inline: var(--space-3);
+		font-size: 1.1rem;
 	}
 
 	.site-main {

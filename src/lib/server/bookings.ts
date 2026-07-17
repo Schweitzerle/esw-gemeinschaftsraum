@@ -10,9 +10,9 @@ export interface BookingInput {
 	title: string;
 	description: string | null;
 	name: string;
-	room: string;
 	contact: string;
 	isPublic: boolean;
+	openEnd: boolean;
 	startsAt: number;
 	endsAt: number;
 }

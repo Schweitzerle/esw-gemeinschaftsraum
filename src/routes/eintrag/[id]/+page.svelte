@@ -33,13 +33,17 @@
 				<dt>Wann</dt>
 				<dd>
 					{formatDayLong(booking.startsAt)}
-					{formatTime(booking.startsAt)} – {formatTime(booking.endsAt)} Uhr
-					{#if crossesMidnight}<span class="hint">(endet am Folgetag)</span>{/if}
+					{#if booking.openEnd}
+						ab {formatTime(booking.startsAt)} Uhr <span class="hint">(offenes Ende)</span>
+					{:else}
+						{formatTime(booking.startsAt)} – {formatTime(booking.endsAt)} Uhr
+						{#if crossesMidnight}<span class="hint">(endet am Folgetag)</span>{/if}
+					{/if}
 				</dd>
 			</div>
 			<div>
 				<dt>Wer</dt>
-				<dd>{booking.name} · Zimmer {booking.room}</dd>
+				<dd>{booking.name}</dd>
 			</div>
 			<div>
 				<dt>Kontakt</dt>

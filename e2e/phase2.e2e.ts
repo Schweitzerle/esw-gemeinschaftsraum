@@ -1,16 +1,16 @@
 import { expect, test, type Page } from '@playwright/test';
 
-/** Datum/Uhrzeit in Berlin, unabhängig von der Zeitzone des Test-Runners (CI = UTC). */
-function berlinNow(offsetMinutes = 0): { date: string; time: string } {
+/**
+ * Uhrzeit in Berlin auf 30 Minuten abgerundet (Raster der Zeitauswahl),
+ * unabhängig von der Zeitzone des Test-Runners (CI = UTC).
+ */
+function berlinTimeFloor30(offsetMinutes = 0): string {
 	const d = new Date(Date.now() + offsetMinutes * 60 * 1000);
-	return {
-		date: d.toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' }),
-		time: d.toLocaleTimeString('de-DE', {
-			timeZone: 'Europe/Berlin',
-			hour: '2-digit',
-			minute: '2-digit'
-		})
-	};
+	const [hour, minute] = d
+		.toLocaleTimeString('de-DE', { timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit' })
+		.split(':')
+		.map(Number);
+	return `${String(hour).padStart(2, '0')}:${minute < 30 ? '00' : '30'}`;
 }
 
 async function hydrated(page: Page): Promise<void> {
@@ -34,14 +34,30 @@ test('Klick auf freien Tag öffnet den Eintragen-Dialog mit Datum', async ({ pag
 	const date = (await freeDay.getAttribute('href'))?.split('tag=')[1] ?? '';
 	await freeDay.click();
 	await expect(page.locator('dialog[open]')).toBeVisible();
-	await expect(page.locator('dialog #date')).toHaveValue(date);
+	await expect(page.locator('dialog input[name="date"]')).toHaveValue(date);
 	await page.click('dialog .button-quiet:has-text("Abbrechen")');
 	await expect(page.locator('dialog[open]')).toHaveCount(0);
 });
 
+test('vergangene Tage sind nicht buchbar', async ({ page }) => {
+	await page.goto('/');
+	await hydrated(page);
+	// Der 1. des Monats liegt in der Vergangenheit (außer am Monatsersten: dann Vormonat)
+	const pastDay = page.locator('.month-day:not(.outside)').first();
+	const date = (await pastDay.getAttribute('href'))?.split('tag=')[1] ?? '';
+	test.skip(date >= new Date().toISOString().slice(0, 10), 'Monatsanfang – kein vergangener Tag');
+	await pastDay.click();
+	// Kein Dialog, sondern Auswahl des Tages ohne Eintragen-Button
+	await expect(page.locator('dialog[open]')).toHaveCount(0);
+	await expect(page).toHaveURL(`/?tag=${date}`);
+	await expect(page.locator('.day-panel .button')).toHaveCount(0);
+});
+
 test('ICS-Feed liefert Kalender mit Token und 403 ohne', async ({ page, request }) => {
 	await page.goto('/');
-	const icsUrl = await page.locator('.ics-box input').inputValue();
+	await hydrated(page);
+	await page.click('.ics-button');
+	const icsUrl = await page.locator('#ics-url').inputValue();
 	expect(icsUrl).toMatch(/\/kalender\.ics\?token=[A-Za-z0-9_-]{32}$/);
 
 	const ok = await request.get(icsUrl);
@@ -54,20 +70,19 @@ test('ICS-Feed liefert Kalender mit Token und 403 ohne', async ({ page, request 
 });
 
 test('Jetzt-Banner zeigt laufende öffentliche Belegung', async ({ page }, testInfo) => {
-	const start = berlinNow(-5); // vor 5 Minuten begonnen (innerhalb der Kulanz)
-	const end = berlinNow(115);
+	// Läuft jetzt: Start auf 30 min abgerundet (innerhalb der Kulanz), Ende in ~2 h
+	const start = berlinTimeFloor30(0);
+	const end = berlinTimeFloor30(120);
 	const title = `Gerade-jetzt ${testInfo.project.name}`;
 
 	await page.goto('/neu');
 	await hydrated(page);
 	await page.fill('#title', title);
-	await page.fill('#date', start.date);
-	await page.fill('#startTime', start.time);
-	await page.fill('#endTime', end.time);
+	await page.selectOption('#startTime', start);
+	await page.selectOption('#endTime', end);
 	await page.fill('#name', 'Bannerin');
-	await page.fill('#room', '7');
 	await page.fill('#contact', '0151 777');
-	await page.check('#isPublic');
+	await page.check('#isPublic', { force: true });
 	await page.click('main button[type=submit]');
 	await page.waitForURL('**/erstellt?token=*');
 	const editUrl = await page.inputValue('#edit-link');

@@ -1,7 +1,5 @@
 import { getDb } from '$lib/server/db';
 import { listBookingsBetween } from '$lib/server/bookings';
-import { getConfig } from '$lib/server/env';
-import { getIcsToken } from '$lib/server/ics';
 import { getNowStatus } from '$lib/server/now-status';
 import {
 	berlinDateTimeToMs,
@@ -18,13 +16,14 @@ import type { PageServerLoad } from './$types';
 
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
-/** Nur die Felder, die die Übersicht braucht — Kontakt/Zimmer/Hash bleiben auf dem Server. */
+/** Nur die Felder, die die Übersicht braucht — Kontakt und Token-Hash bleiben auf dem Server. */
 function toPublicEntry(booking: Booking, dayStartMs: number, dayEndMs: number) {
 	return {
 		id: booking.id,
 		title: booking.title,
 		name: booking.name,
 		isPublic: booking.isPublic,
+		openEnd: booking.openEnd,
 		startsAt: booking.startsAt,
 		endsAt: booking.endsAt,
 		continuesFromPrevDay: booking.startsAt < dayStartMs,
@@ -77,11 +76,11 @@ export const load: PageServerLoad = ({ url }) => {
 						id: current.id,
 						title: current.title,
 						isPublic: current.isPublic,
+						openEnd: current.openEnd,
 						endsAt: current.endsAt
 					}
 				: null,
 			next: next ? { id: next.id, title: next.title, startsAt: next.startsAt } : null
-		},
-		icsPath: `/kalender.ics?token=${getIcsToken(getConfig().sessionSecret)}`
+		}
 	};
 };

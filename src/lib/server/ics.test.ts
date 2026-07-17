@@ -11,7 +11,7 @@ function booking(overrides: Partial<Booking>): Booking {
 		title: 'Spieleabend',
 		description: null,
 		name: 'Julia',
-		room: '204',
+		openEnd: false,
 		contact: 'geheim',
 		isPublic: true,
 		startsAt: berlinDateTimeToMs('2026-07-18', '19:00'),

@@ -19,9 +19,9 @@ function input(overrides: Partial<Parameters<typeof createBooking>[1]> = {}) {
 		title: 'Spieleabend',
 		description: null,
 		name: 'Julia',
-		room: '204',
 		contact: '0151 12345678',
 		isPublic: true,
+		openEnd: false,
 		startsAt: berlinDateTimeToMs('2026-07-18', '19:00'),
 		endsAt: berlinDateTimeToMs('2026-07-18', '23:00'),
 		...overrides

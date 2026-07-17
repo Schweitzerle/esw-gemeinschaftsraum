@@ -102,8 +102,11 @@ CI (GitHub Actions) fährt lint → check → unit → build und die E2E-Suite b
   `/datenschutz`.
 - **Rate-Limits** (in-memory): Login 10 Versuche / 15 min pro IP, Schreibaktionen 30 / min.
 - **Bedienung:** Startseite ist ein Monatskalender mit Tages-Panel. Ein Tipp auf einen
-  freien Tag öffnet direkt den Eintragen-Dialog mit vorbefülltem Datum; ohne JavaScript
-  fällt alles auf die Formular-Seite `/neu` zurück (Progressive Enhancement).
+  freien (künftigen) Tag öffnet direkt den Eintragen-Dialog mit vorbefülltem Datum,
+  Einträge öffnen sich als Detail-Dialog; ohne JavaScript fällt alles auf eigene Seiten
+  zurück (Progressive Enhancement). Datum/Uhrzeit sind eigene deutsche Picker
+  (30-min-Raster); die Endzeit ist optional – ohne sie gilt „offenes Ende" (6 h
+  reserviert). Fehler wie Belegungskonflikte erscheinen als Toast.
 - **Extras:** „Jetzt gerade"-Banner (läuft etwas? wann ist der Raum wieder frei?),
   Ruhezeiten-Hinweis im Formular und ein read-only **Kalender-Abo**
   (`/kalender.ics?token=…`, Link auf der Startseite — enthält nur Titel und Zeiten,

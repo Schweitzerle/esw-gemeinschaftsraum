@@ -12,7 +12,6 @@ function validForm(overrides: Record<string, string> = {}): Record<string, strin
 		startTime: '19:00',
 		endTime: '23:00',
 		name: 'Julia',
-		room: '204',
 		contact: '0151 12345678',
 		isPublic: 'on',
 		description: '',
@@ -104,5 +103,20 @@ describe('validateBookingForm', () => {
 		expect(result.success).toBe(true);
 		if (!result.success) return;
 		expect(result.data.name).toBe('Julia');
+	});
+
+	test('leere Endzeit bedeutet offenes Ende (6 Stunden reserviert)', () => {
+		const result = validateBookingForm(validForm({ endTime: '' }), NOW);
+		expect(result.success).toBe(true);
+		if (!result.success) return;
+		expect(result.data.openEnd).toBe(true);
+		expect(result.data.endsAt - result.data.startsAt).toBe(6 * 60 * 60 * 1000);
+	});
+
+	test('gesetzte Endzeit bedeutet kein offenes Ende', () => {
+		const result = validateBookingForm(validForm(), NOW);
+		expect(result.success).toBe(true);
+		if (!result.success) return;
+		expect(result.data.openEnd).toBe(false);
 	});
 });

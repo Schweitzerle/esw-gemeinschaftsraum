@@ -20,11 +20,11 @@ if (!building) {
 export const handle: Handle = async ({ event, resolve }) => {
 	const { pathname, search } = event.url;
 
-	if (!PUBLIC_PATHS.has(pathname)) {
-		const cookie = event.cookies.get(SESSION_COOKIE) ?? '';
-		if (!verifySessionValue(getConfig().sessionSecret, cookie)) {
-			redirect(303, `/login?weiter=${encodeURIComponent(pathname + search)}`);
-		}
+	const cookie = event.cookies.get(SESSION_COOKIE) ?? '';
+	event.locals.authenticated = verifySessionValue(getConfig().sessionSecret, cookie);
+
+	if (!PUBLIC_PATHS.has(pathname) && !event.locals.authenticated) {
+		redirect(303, `/login?weiter=${encodeURIComponent(pathname + search)}`);
 	}
 
 	const response = await resolve(event);

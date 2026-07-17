@@ -58,9 +58,15 @@ Zentrale Bausteine und ihr Zusammenspiel:
 - **UI-Fluss**: Startseite `/` = Monatskalender (`?tag=YYYY-MM-DD` wählt Tag und Monat)
   mit Tages-Panel darunter. Eintragen läuft über `BookingDialog.svelte` (natives
   `<dialog>`, im Layout gemountet, per Svelte-Context `booking-dialog` geöffnet; Klick
-  auf freien Tag öffnet ihn direkt mit Datum). Der Dialog postet an die Action von
-  `/neu` — diese Seite ist zugleich der No-JS-Fallback. Dialog-Inhalt wird nur bei
-  geöffnetem Dialog gerendert (sonst doppelte Feld-IDs mit `/neu`).
+  auf freien künftigen Tag öffnet ihn direkt mit Datum). Der Dialog postet an die Action
+  von `/neu` — diese Seite ist zugleich der No-JS-Fallback. Dialog-Inhalt wird nur bei
+  geöffnetem Dialog gerendert (sonst doppelte Feld-IDs mit `/neu`). Eintrag-Details
+  öffnen als `DetailDialog` via Shallow Routing (`preloadData` + `pushState`,
+  `page.state.detail`); `/eintrag/[id]` bleibt als Fallback/Direktlink. Datum/Uhrzeit
+  sind eigene Komponenten (`DateField` mit nativem Input vor der Hydration,
+  `TimeSelect` im 30-min-Raster — die Vergangenheits-Kulanz ist deshalb 30 min). Leere
+  Endzeit = „offenes Ende" (`openEnd`-Spalte, 6 h reserviert). Fehler-Meldungen der
+  Actions laufen zusätzlich als Toast (`$lib/toast.svelte.ts`).
 - **Datensparsamkeit ist Design-Regel**: `+page.server.ts`-Loads geben nie `editTokenHash`
   oder unnötige Felder an den Client (Übersicht: kein Kontakt/Zimmer — erst die
   Detailseite zeigt Kontakt); der ICS-Feed enthält nur Titel + Zeiten.

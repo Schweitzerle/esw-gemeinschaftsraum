@@ -7,9 +7,10 @@ export const bookings = sqliteTable(
 		title: text('title').notNull(),
 		description: text('description'),
 		name: text('name').notNull(),
-		room: text('room').notNull(),
 		contact: text('contact').notNull(),
 		isPublic: integer('is_public', { mode: 'boolean' }).notNull().default(false),
+		/** true = ohne angegebene Endzeit eingetragen („offenes Ende") */
+		openEnd: integer('open_end', { mode: 'boolean' }).notNull().default(false),
 		/** Beginn als Unix-Zeit in Millisekunden (UTC) */
 		startsAt: integer('starts_at').notNull(),
 		/** Ende als Unix-Zeit in Millisekunden (UTC), immer > startsAt */

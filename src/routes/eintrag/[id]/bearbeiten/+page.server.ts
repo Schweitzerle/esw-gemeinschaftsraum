@@ -37,9 +37,8 @@ export const load: PageServerLoad = ({ params, url }) => {
 			title: booking.title,
 			date: toBerlinDate(booking.startsAt),
 			startTime: formatTime(booking.startsAt),
-			endTime: formatTime(booking.endsAt),
+			endTime: booking.openEnd ? '' : formatTime(booking.endsAt),
 			name: booking.name,
-			room: booking.room,
 			contact: booking.contact,
 			isPublic: booking.isPublic ? 'on' : '',
 			description: booking.description ?? ''

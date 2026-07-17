@@ -12,10 +12,9 @@
 
 	<h2>Welche Daten werden gespeichert?</h2>
 	<p>
-		Nur das, was du beim Eintragen selbst angibst: Titel/Anlass, Zeitraum, dein Name, deine
-		Zimmer-/Wohnungsnummer, eine Kontaktmöglichkeit (z. B. Handynummer) und optional eine
-		Beschreibung. Diese Angaben sind für alle sichtbar, die das Haus-Passwort kennen – also für die
-		Bewohner des Hauses.
+		Nur das, was du beim Eintragen selbst angibst: Titel/Anlass, Zeitraum, dein Name, eine
+		Kontaktmöglichkeit (z. B. Handynummer) und optional eine Beschreibung. Diese Angaben sind für
+		alle sichtbar, die das Haus-Passwort kennen – also für die Bewohner des Hauses.
 	</p>
 
 	<h2>Wozu?</h2>

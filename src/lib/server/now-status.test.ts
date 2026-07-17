@@ -9,7 +9,7 @@ function booking(overrides: Partial<Booking>): Booking {
 		title: 'Spieleabend',
 		description: null,
 		name: 'Julia',
-		room: '204',
+		openEnd: false,
 		contact: 'x',
 		isPublic: true,
 		startsAt: 0,

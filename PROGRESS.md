@@ -29,7 +29,8 @@ Anforderungen: siehe lokale `PROMPT.md` (nicht im Repo) bzw. README.
 - [x] Prod-Smoke mit `node build` (Gate, Login, CSP, ENV-Abbruch geprüft)
 - [x] README-Betriebsanleitung, Dockerfile + compose.yml, Screenshots in docs/
 - [x] Phase 2: Jetzt-Banner + „Frei bis", Ruhezeiten-Hinweis, Monatsübersicht, ICS-Feed `/kalender.ics?token=…` (Token = HMAC aus SESSION_SECRET)
-- [x] UX-Refactor nach Nutzer-Feedback (17.07.2026): Monat ist jetzt die Startansicht `/` (`?tag=` statt Wochenansicht/`?datum=`), Tages-Panel darunter, Klick auf freien Tag öffnet den Eintragen-Dialog (`BookingDialog.svelte`, No-JS-Fallback `/neu`), Login-Overflow gefixt, Cookie-`secure` via Kit-Default (localhost-http erlaubt) — E2E: 29 Tests grün
+- [x] UX-Refactor nach Nutzer-Feedback (17.07.2026): Monat ist jetzt die Startansicht `/` (`?tag=` statt Wochenansicht/`?datum=`), Tages-Panel darunter, Klick auf freien Tag öffnet den Eintragen-Dialog (`BookingDialog.svelte`, No-JS-Fallback `/neu`), Login-Overflow gefixt, Cookie-`secure` via Kit-Default (localhost-http erlaubt)
+- [x] Feedback-Runde 2 (18.07.2026): Zimmer-Feld entfernt + Migration 0001 (Spalte `open_end` neu, `room` weg — Migration von Hand geschrieben, drizzle-kit-TUI braucht TTY), Endzeit optional = „offenes Ende" (6 h, `OPEN_END_DURATION_MS`), eigene deutsche Date-/Time-Picker (`DateField`/`TimeSelect`, 30-min-Raster, Kulanz deshalb 30 min), Toggle-Switch + `InfoTip`-Tooltips, Toast-System (`toast.svelte.ts` + `Toasts.svelte`), Eintrag-Detail als Dialog via Shallow Routing (`preloadData`+`pushState`, `page.state.detail`), ICS-Abo-Button in der Navbar (`+layout.server.ts`, `locals.authenticated`), vergangene Tage nicht buchbar — E2E: 31 Tests grün
 - [ ] Abschluss: CLAUDE.md (/init), Bericht + WhatsApp-Text — Task 10
 
 ## Nächste Schritte

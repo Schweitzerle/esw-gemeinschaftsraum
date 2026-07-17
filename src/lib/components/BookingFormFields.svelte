@@ -1,4 +1,8 @@
 <script lang="ts">
+	import DateField from '$lib/components/DateField.svelte';
+	import InfoTip from '$lib/components/InfoTip.svelte';
+	import TimeSelect from '$lib/components/TimeSelect.svelte';
+	import { todayInBerlin } from '$lib/time';
 	import type { FieldErrors } from '$lib/validation/booking';
 
 	interface Props {
@@ -35,57 +39,50 @@
 	{@render fieldError('title')}
 </div>
 
-<div class="field-row">
+<div class="field-row time-row">
 	<div class="field">
 		<label for="date">Datum *</label>
-		<input
+		<DateField
 			id="date"
 			name="date"
-			type="date"
-			required
 			value={values.date ?? ''}
-			aria-invalid={fieldErrors.date ? 'true' : undefined}
-			aria-describedby={errorId('date')}
+			min={todayInBerlin()}
+			invalid={Boolean(fieldErrors.date)}
+			describedby={errorId('date')}
 		/>
 		{@render fieldError('date')}
 	</div>
 	<div class="field">
 		<label for="startTime">Von *</label>
-		<input
+		<TimeSelect
 			id="startTime"
 			name="startTime"
-			type="time"
-			required
 			value={values.startTime ?? ''}
-			aria-invalid={fieldErrors.startTime ? 'true' : undefined}
-			aria-describedby={errorId('startTime')}
+			invalid={Boolean(fieldErrors.startTime)}
+			describedby={errorId('startTime')}
 		/>
 		{@render fieldError('startTime')}
 	</div>
 	<div class="field">
-		<label for="endTime">Bis *</label>
-		<input
+		<label for="endTime">
+			Bis
+			<InfoTip
+				text="Ohne Endzeit gilt „offenes Ende“ – wir reservieren dann 6 Stunden. Endet ihr nach Mitternacht, wähl einfach die Uhrzeit am Folgetag."
+			/>
+		</label>
+		<TimeSelect
 			id="endTime"
 			name="endTime"
-			type="time"
-			required
 			value={values.endTime ?? ''}
-			aria-invalid={fieldErrors.endTime ? 'true' : undefined}
-			aria-describedby={errorId('endTime')}
+			allowEmpty
+			invalid={Boolean(fieldErrors.endTime)}
+			describedby={errorId('endTime')}
 		/>
 		{@render fieldError('endTime')}
 	</div>
 </div>
 
-<p class="field-hint">
-	Endet deine Feier nach Mitternacht? Einfach die Endzeit am Folgetag eintragen (z. B. 22:00 bis
-	02:00).
-</p>
-
-<p class="quiet-hours">
-	🌙 Ab 22 Uhr gilt im Haus Ruhezeit – feiern ist okay, aber bitte denkt drinnen wie draußen an die
-	Nachbarn.
-</p>
+<p class="quiet-hours">🌙 Ab 22 Uhr bitte an die Ruhezeiten im Haus denken.</p>
 
 <div class="field-row">
 	<div class="field">
@@ -104,48 +101,43 @@
 		{@render fieldError('name')}
 	</div>
 	<div class="field">
-		<label for="room">Zimmer / Wohnung *</label>
+		<label for="contact">
+			Kontakt *
+			<InfoTip
+				text="Handynummer oder Ähnliches – damit man dich erreichen kann, falls es z. B. zu laut wird. Sichtbar erst in der Detailansicht eines Eintrags."
+			/>
+		</label>
 		<input
-			id="room"
-			name="room"
+			id="contact"
+			name="contact"
 			type="text"
 			required
-			maxlength="20"
-			placeholder="z. B. 204"
-			value={values.room ?? ''}
-			aria-invalid={fieldErrors.room ? 'true' : undefined}
-			aria-describedby={errorId('room')}
+			maxlength="100"
+			placeholder="z. B. 0151 2345678"
+			value={values.contact ?? ''}
+			aria-invalid={fieldErrors.contact ? 'true' : undefined}
+			aria-describedby={errorId('contact')}
 		/>
-		{@render fieldError('room')}
+		{@render fieldError('contact')}
 	</div>
 </div>
 
-<div class="field">
-	<label for="contact">Kontakt *</label>
-	<input
-		id="contact"
-		name="contact"
-		type="text"
-		required
-		maxlength="100"
-		placeholder="Handynummer o. Ä. – falls es mal zu laut wird"
-		value={values.contact ?? ''}
-		aria-invalid={fieldErrors.contact ? 'true' : undefined}
-		aria-describedby={errorId('contact')}
-	/>
-	{@render fieldError('contact')}
-</div>
-
-<div class="field toggle-field">
-	<label class="toggle-label" for="isPublic">
-		<input id="isPublic" name="isPublic" type="checkbox" checked={values.isPublic === 'on'} />
-		<span>
-			<strong>Öffentlich – andere dürfen dazukommen</strong>
-			<small>
-				Öffentlich heißt: Mitbewohner sind eingeladen, spontan vorbeizuschauen. Privat heißt: ihr
-				bleibt unter euch (der Eintrag ist trotzdem für alle sichtbar).
-			</small>
-		</span>
+<div class="field switch-field">
+	<span class="switch-text">
+		Öffentlich – andere dürfen dazukommen
+		<InfoTip
+			text="Öffentlich heißt: Mitbewohner sind eingeladen, spontan vorbeizuschauen. Privat heißt: ihr bleibt unter euch. Der Eintrag selbst ist immer für alle sichtbar."
+		/>
+	</span>
+	<label class="switch">
+		<input
+			type="checkbox"
+			name="isPublic"
+			id="isPublic"
+			checked={values.isPublic === 'on'}
+			aria-label="Öffentlich – andere dürfen dazukommen"
+		/>
+		<span class="switch-track" aria-hidden="true"></span>
 	</label>
 </div>
 
@@ -169,49 +161,97 @@
 		gap: var(--space-1);
 	}
 
+	.field label {
+		display: flex;
+		align-items: center;
+		gap: var(--space-1);
+	}
+
 	.field-row {
 		display: grid;
 		gap: var(--space-3);
 	}
 
-	@media (min-width: 480px) {
+	@media (min-width: 560px) {
 		.field-row {
-			grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+			grid-template-columns: 1fr 1fr;
 		}
-	}
 
-	.field-hint {
-		font-size: var(--text-sm);
-		color: var(--color-text-soft);
+		.time-row {
+			grid-template-columns: 1.3fr 1fr 1fr;
+		}
 	}
 
 	.quiet-hours {
 		font-size: var(--text-sm);
-		background: var(--color-accent-soft);
+		color: var(--color-text-soft);
+	}
+
+	.switch-field {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-3);
+		background: var(--color-surface-raised);
+		border: 1.5px solid var(--color-border);
 		border-radius: var(--radius-sm);
 		padding: var(--space-2) var(--space-3);
 	}
 
-	.toggle-field .toggle-label {
+	.switch-text {
 		display: flex;
-		gap: var(--space-3);
-		align-items: flex-start;
-		font-weight: 400;
-		font-size: var(--text-base);
+		align-items: center;
+		gap: var(--space-2);
+		font-weight: 600;
+	}
+
+	.switch {
+		position: relative;
+		display: inline-flex;
+		flex-shrink: 0;
 		cursor: pointer;
 	}
 
-	.toggle-label input {
-		width: 1.4rem;
-		height: 1.4rem;
-		margin-block-start: 0.15rem;
-		accent-color: var(--color-accent);
-		flex-shrink: 0;
+	.switch input {
+		position: absolute;
+		opacity: 0;
+		width: 100%;
+		height: 100%;
+		cursor: pointer;
 	}
 
-	.toggle-label small {
-		display: block;
-		color: var(--color-text-soft);
-		margin-block-start: var(--space-1);
+	.switch-track {
+		width: 3rem;
+		height: 1.7rem;
+		border-radius: 999px;
+		background: var(--color-border);
+		transition: background var(--duration-fast) var(--ease-out);
+		position: relative;
+	}
+
+	.switch-track::after {
+		content: '';
+		position: absolute;
+		top: 0.2rem;
+		inset-inline-start: 0.2rem;
+		width: 1.3rem;
+		height: 1.3rem;
+		border-radius: 999px;
+		background: var(--color-surface-raised);
+		box-shadow: var(--shadow-card);
+		transition: translate var(--duration-fast) var(--ease-out);
+	}
+
+	.switch input:checked + .switch-track {
+		background: var(--color-free);
+	}
+
+	.switch input:checked + .switch-track::after {
+		translate: 1.3rem 0;
+	}
+
+	.switch input:focus-visible + .switch-track {
+		outline: 3px solid var(--color-focus);
+		outline-offset: 2px;
 	}
 </style>

@@ -1,10 +1,13 @@
 <script lang="ts">
+	import { tick } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import BookingFormFields from '$lib/components/BookingFormFields.svelte';
+	import { addToast } from '$lib/toast.svelte';
 	import type { FieldErrors } from '$lib/validation/booking';
 
 	let dialogEl: HTMLDialogElement;
+	let bodyEl = $state<HTMLElement>();
 	let submitting = $state(false);
 	// Inhalt nur bei offenem Dialog rendern, damit die Feld-IDs die /neu-Seite nicht doppeln
 	let isOpen = $state(false);
@@ -37,7 +40,7 @@
 	aria-labelledby="dialog-titel"
 >
 	{#if isOpen}
-		<div class="dialog-body">
+		<div class="dialog-body" bind:this={bodyEl}>
 			<header>
 				<h2 id="dialog-titel">Raum reservieren</h2>
 				<button
@@ -63,8 +66,16 @@
 							values = (result.data.values as Record<string, string>) ?? values;
 							fieldErrors = (result.data.fieldErrors as FieldErrors) ?? {};
 							formError = (result.data.formError as string | undefined) ?? undefined;
+							if (formError) {
+								addToast(formError, 'error');
+							}
+							// Zum ersten Problemfeld scrollen, damit der Fehler sofort sichtbar ist
+							await tick();
+							bodyEl
+								?.querySelector('[aria-invalid="true"]')
+								?.scrollIntoView({ block: 'center', behavior: 'smooth' });
 						} else if (result.type === 'error') {
-							formError = 'Das hat leider nicht geklappt. Probier es gleich nochmal.';
+							addToast('Das hat leider nicht geklappt. Probier es gleich nochmal.', 'error');
 						}
 					};
 				}}
@@ -130,7 +141,7 @@
 		}
 
 		.dialog-body {
-			width: min(34rem, 100%);
+			width: min(44rem, 100%);
 			border-radius: var(--radius-lg);
 			max-height: 90dvh;
 		}

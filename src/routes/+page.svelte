@@ -1,36 +1,53 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
+	import { goto, preloadData, pushState } from '$app/navigation';
 	import { page } from '$app/state';
+	import DetailDialog from '$lib/components/DetailDialog.svelte';
 	import { formatDayLong, formatTime } from '$lib/time';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
 	const dialog = getContext<{ open: (date: string) => void }>('booking-dialog');
-	const icsUrl = $derived(new URL(data.icsPath, page.url.origin).href);
 
 	const WEEKDAYS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 
 	interface DayEntry {
+		openEnd: boolean;
 		startsAt: number;
 		endsAt: number;
 		continuesFromPrevDay: boolean;
 		continuesIntoNextDay: boolean;
 	}
 
+	const isPastSelected = $derived(data.selected < data.today);
+
 	function timeLabel(entry: DayEntry): string {
 		const start = formatTime(entry.startsAt);
 		const end = formatTime(entry.endsAt);
+		if (entry.openEnd) return `ab ${start} (offenes Ende)`;
 		if (entry.continuesFromPrevDay) return `noch bis ${end}`;
 		if (entry.continuesIntoNextDay) return `${start} – ${end} (Folgetag)`;
 		return `${start} – ${end}`;
 	}
 
-	/** Freier Tag: direkt den Eintragen-Dialog öffnen statt nur auszuwählen. */
+	/** Freier Tag in der Zukunft: direkt den Eintragen-Dialog öffnen statt nur auszuwählen. */
 	function onDayClick(event: MouseEvent, date: string, entryCount: number): void {
-		if (entryCount === 0) {
+		if (entryCount === 0 && date >= data.today) {
 			event.preventDefault();
 			dialog.open(date);
+		}
+	}
+
+	/** Eintrag-Details als Dialog statt Seitenwechsel (Shallow Routing). */
+	async function openDetail(event: MouseEvent, href: string): Promise<void> {
+		if (event.metaKey || event.ctrlKey || event.shiftKey) return;
+		event.preventDefault();
+		const result = await preloadData(href);
+		if (result.type === 'loaded' && result.status === 200) {
+			pushState(href, { detail: result.data as NonNullable<App.PageState['detail']> });
+		} else {
+			await goto(href);
 		}
 	}
 </script>
@@ -40,13 +57,20 @@
 </svelte:head>
 
 {#if data.now.current}
-	<a href="/eintrag/{data.now.current.id}" class="now-banner is-busy">
+	{@const endLabel = data.now.current.openEnd
+		? 'offenes Ende'
+		: `noch bis ${formatTime(data.now.current.endsAt)} Uhr`}
+	<a
+		href="/eintrag/{data.now.current.id}"
+		class="now-banner is-busy"
+		onclick={(e) => openDetail(e, `/eintrag/${data.now.current?.id}`)}
+	>
 		{#if data.now.current.isPublic}
 			<strong>🎉 Jetzt gerade: {data.now.current.title}</strong>
-			<span>Öffentlich – komm vorbei! Noch bis {formatTime(data.now.current.endsAt)} Uhr.</span>
+			<span>Öffentlich – komm vorbei! ({endLabel})</span>
 		{:else}
 			<strong>🔒 Jetzt gerade: {data.now.current.title}</strong>
-			<span>Privat – noch bis {formatTime(data.now.current.endsAt)} Uhr.</span>
+			<span>Privat – {endLabel}.</span>
 		{/if}
 	</a>
 {:else if data.now.next}
@@ -127,25 +151,35 @@
 			{formatDayLong(data.dayStartMs)}
 			{#if data.selected === data.today}<span class="today-badge">Heute</span>{/if}
 		</h2>
-		<a
-			href="/neu?datum={data.selected}"
-			class="button"
-			onclick={(e) => {
-				e.preventDefault();
-				dialog.open(data.selected);
-			}}
-		>
-			+ Eintragen
-		</a>
+		{#if !isPastSelected}
+			<a
+				href="/neu?datum={data.selected}"
+				class="button"
+				onclick={(e) => {
+					e.preventDefault();
+					dialog.open(data.selected);
+				}}
+			>
+				+ Eintragen
+			</a>
+		{/if}
 	</header>
 
 	{#if data.dayEntries.length === 0}
-		<p class="day-free">○ Frei – der Raum gehört dir. Tipp auf „+ Eintragen" und er ist deiner.</p>
+		<p class="day-free">
+			{isPastSelected
+				? '○ Hier war nichts eingetragen.'
+				: '○ Frei – der Raum gehört dir. Tipp auf „+ Eintragen" und er ist deiner.'}
+		</p>
 	{:else}
 		<ul class="day-bookings">
 			{#each data.dayEntries as entry (entry.id)}
 				<li>
-					<a href="/eintrag/{entry.id}" class="booking-card">
+					<a
+						href="/eintrag/{entry.id}"
+						class="booking-card"
+						onclick={(e) => openDetail(e, `/eintrag/${entry.id}`)}
+					>
 						<span class="booking-time">{timeLabel(entry)}</span>
 						<span class="booking-title">{entry.title}</span>
 						<span class="booking-meta">
@@ -161,14 +195,9 @@
 	{/if}
 </section>
 
-<details class="ics-box">
-	<summary>📅 Belegungen im Handy-Kalender abonnieren</summary>
-	<p>
-		Füge diese Adresse in deiner Kalender-App als Kalender-Abo hinzu (nur Titel und Zeiten, keine
-		Kontaktdaten):
-	</p>
-	<input type="text" readonly value={icsUrl} onfocus={(e) => e.currentTarget.select()} />
-</details>
+{#if page.state.detail}
+	<DetailDialog booking={page.state.detail.booking} onclose={() => history.back()} />
+{/if}
 
 <style>
 	.now-banner {
@@ -450,31 +479,5 @@
 
 	.badge-public {
 		color: var(--color-free);
-	}
-
-	.ics-box {
-		margin-block-start: var(--space-6);
-		border: 1.5px solid var(--color-border);
-		border-radius: var(--radius-md);
-		padding: var(--space-2) var(--space-4);
-		font-size: var(--text-sm);
-		color: var(--color-text-soft);
-	}
-
-	.ics-box summary {
-		cursor: pointer;
-		font-weight: 700;
-		min-height: 44px;
-		display: flex;
-		align-items: center;
-	}
-
-	.ics-box p {
-		margin-block-end: var(--space-2);
-	}
-
-	.ics-box input {
-		margin-block-end: var(--space-3);
-		font-size: var(--text-sm);
 	}
 </style>

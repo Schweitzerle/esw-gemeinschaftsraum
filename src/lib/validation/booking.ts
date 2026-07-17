@@ -1,12 +1,14 @@
 import { z } from 'zod';
-import { computeRange, isRealDate } from '$lib/time';
+import { berlinDateTimeToMs, computeRange, isRealDate } from '$lib/time';
 
 /** Maximal 3 Monate im Voraus buchbar */
 export const MAX_ADVANCE_DAYS = 92;
 /** Maximale Dauer einer Buchung */
 export const MAX_DURATION_MS = 12 * 60 * 60 * 1000;
-/** Kulanz für „gerade eben begonnene" Buchungen */
-export const PAST_GRACE_MS = 15 * 60 * 1000;
+/** Ohne Endzeit („offenes Ende") wird der Raum so lange reserviert */
+export const OPEN_END_DURATION_MS = 6 * 60 * 60 * 1000;
+/** Kulanz für „gerade eben begonnene" Buchungen (Zeitauswahl hat 30-min-Raster) */
+export const PAST_GRACE_MS = 30 * 60 * 1000;
 
 const TIME_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
@@ -27,11 +29,6 @@ const formSchema = z.object({
 		.trim()
 		.min(1, 'Bitte gib deinen Namen an.')
 		.max(50, 'Der Name darf höchstens 50 Zeichen lang sein.'),
-	room: z
-		.string()
-		.trim()
-		.min(1, 'Bitte gib deine Zimmer- oder Wohnungsnummer an.')
-		.max(20, 'Die Zimmernummer darf höchstens 20 Zeichen lang sein.'),
 	contact: z
 		.string()
 		.trim()
@@ -42,18 +39,21 @@ const formSchema = z.object({
 		.regex(DATE_REGEX, 'Bitte gib ein gültiges Datum an.')
 		.refine(isRealDate, 'Dieses Datum gibt es nicht.'),
 	startTime: z.string().regex(TIME_REGEX, 'Bitte gib eine gültige Startzeit an (HH:MM).'),
-	endTime: z.string().regex(TIME_REGEX, 'Bitte gib eine gültige Endzeit an (HH:MM).')
+	// Leer = offenes Ende
+	endTime: z
+		.string()
+		.regex(TIME_REGEX, 'Bitte gib eine gültige Endzeit an (HH:MM).')
+		.or(z.literal(''))
+		.default('')
 });
-
-export type BookingFormFields = z.infer<typeof formSchema> & { isPublic: string | undefined };
 
 export interface BookingData {
 	title: string;
 	description: string | null;
 	name: string;
-	room: string;
 	contact: string;
 	isPublic: boolean;
+	openEnd: boolean;
 	startsAt: number;
 	endsAt: number;
 }
@@ -72,7 +72,8 @@ function toRecord(form: FormData | Record<string, unknown>): Record<string, unkn
 
 /**
  * Validiert die Formulareingaben für einen Belegungseintrag und berechnet
- * den Zeitraum in Unix-ms. Alle Meldungen sind deutsch und feldbezogen.
+ * den Zeitraum in Unix-ms. Ohne Endzeit gilt „offenes Ende" (6 h reserviert).
+ * Alle Meldungen sind deutsch und feldbezogen.
  */
 export function validateBookingForm(
 	form: FormData | Record<string, unknown>,
@@ -85,7 +86,13 @@ export function validateBookingForm(
 	}
 
 	const { date, startTime, endTime, description, ...rest } = parsed.data;
-	const { startsAt, endsAt } = computeRange(date, startTime, endTime);
+	const openEnd = endTime === '';
+	const { startsAt, endsAt } = openEnd
+		? (() => {
+				const start = berlinDateTimeToMs(date, startTime);
+				return { startsAt: start, endsAt: start + OPEN_END_DURATION_MS };
+			})()
+		: computeRange(date, startTime, endTime);
 
 	const fieldErrors: FieldErrors = {};
 	if (startsAt < nowMs - PAST_GRACE_MS) {
@@ -106,6 +113,7 @@ export function validateBookingForm(
 			...rest,
 			description: description === '' ? null : description,
 			isPublic: raw.isPublic !== undefined && raw.isPublic !== '',
+			openEnd,
 			startsAt,
 			endsAt
 		}
