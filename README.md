@@ -5,8 +5,8 @@ Bewohner sehen auf einen Blick, wann der Raum frei ist, tragen sich selbst ein
 (ohne Account) und können ihren Eintrag über einen geheimen Link ändern oder löschen.
 Die ganze Seite liegt hinter einem gemeinsamen Haus-Passwort.
 
-| Mobil (hell)                              | Mobil (dunkel)                                        | Desktop                                       | Eintragen-Dialog                              |
-| ----------------------------------------- | ----------------------------------------------------- | --------------------------------------------- | --------------------------------------------- |
+| Mobil (hell)                                  | Mobil (dunkel)                                            | Desktop                                           | Eintragen-Dialog                           |
+| --------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------ |
 | ![Übersicht mobil](docs/uebersicht-mobil.png) | ![Übersicht mobil dunkel](docs/uebersicht-mobil-dark.png) | ![Übersicht Desktop](docs/uebersicht-desktop.png) | ![Eintragen-Dialog](docs/dialog-mobil.png) |
 
 **Stack:** SvelteKit (Svelte 5, TypeScript, `adapter-node`) · SQLite (`better-sqlite3` + Drizzle)
