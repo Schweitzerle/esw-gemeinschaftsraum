@@ -12,6 +12,6 @@ setup('anmelden', async ({ page }) => {
 	await page.fill('#passwort', 'e2e-passwort');
 	await page.click('button[type=submit]');
 	await page.waitForURL('/');
-	await expect(page.locator('h1')).toContainText('Wer ist im Raum?');
+	await expect(page.locator('.month')).toBeVisible();
 	await page.context().storageState({ path: STORAGE_STATE });
 });

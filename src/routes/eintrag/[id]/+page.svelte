@@ -14,7 +14,7 @@
 </svelte:head>
 
 <article class="detail">
-	<a href="/?datum={data.weekDate}" class="back-link">‹ Zur Wochenübersicht</a>
+	<a href="/?tag={data.weekDate}" class="back-link">‹ Zur Übersicht</a>
 
 	{#if data.justSaved}
 		<p class="saved-notice" role="status">✓ Deine Änderungen sind gespeichert.</p>

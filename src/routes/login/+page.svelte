@@ -73,7 +73,7 @@
 	}
 
 	h1 {
-		font-size: var(--text-hero);
+		font-size: var(--text-xl);
 	}
 
 	.login-intro {

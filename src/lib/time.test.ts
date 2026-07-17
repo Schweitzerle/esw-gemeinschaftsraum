@@ -1,12 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import {
-	berlinDateTimeToMs,
-	computeRange,
-	formatDayLong,
-	formatTime,
-	todayInBerlin,
-	weekDays
-} from './time';
+import { berlinDateTimeToMs, computeRange, formatDayLong, formatTime, todayInBerlin } from './time';
 
 describe('berlinDateTimeToMs', () => {
 	test('wandelt Sommerzeit-Datum korrekt um (UTC+2)', () => {
@@ -50,15 +43,8 @@ describe('Anzeige-Formatierung', () => {
 	});
 });
 
-describe('Wochen-Helfer', () => {
-	test('weekDays liefert 7 Tage ab Montag', () => {
-		const days = weekDays('2026-07-17'); // Freitag
-		expect(days).toHaveLength(7);
-		expect(days[0].date).toBe('2026-07-13'); // Montag
-		expect(days[6].date).toBe('2026-07-19'); // Sonntag
-	});
-
-	test('todayInBerlin liefert ISO-Datum', () => {
+describe('todayInBerlin', () => {
+	test('liefert ISO-Datum', () => {
 		expect(todayInBerlin()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
 	});
 });

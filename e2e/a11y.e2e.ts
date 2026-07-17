@@ -28,9 +28,14 @@ test('Hauptseiten sind barrierefrei', async ({ page }) => {
 	await page.goto('/neu');
 	await expectNoSeriousViolations(page);
 
-	await page.goto('/monat');
-	await expectNoSeriousViolations(page);
-
 	await page.goto('/datenschutz');
+	await expectNoSeriousViolations(page);
+});
+
+test('Eintragen-Dialog ist barrierefrei', async ({ page }) => {
+	await page.goto('/');
+	await page.waitForSelector('body[data-hydrated]', { state: 'attached' });
+	await page.click('.header-cta');
+	await page.waitForSelector('dialog[open]');
 	await expectNoSeriousViolations(page);
 });

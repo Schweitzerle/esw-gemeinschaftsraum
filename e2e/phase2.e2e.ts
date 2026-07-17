@@ -19,15 +19,24 @@ async function hydrated(page: Page): Promise<void> {
 
 test.describe.configure({ mode: 'serial' });
 
-test('Monatsübersicht zeigt Kalendergitter und verlinkt zur Woche', async ({ page }) => {
+test('Startseite zeigt Monatsgitter mit Tages-Panel', async ({ page }) => {
 	await page.goto('/');
-	await page.click('a[href^="/monat"]');
-	await page.waitForURL('**/monat?datum=*');
 	await expect(page.locator('h1')).toContainText(/\d{4}/);
 	expect(await page.locator('.month-day').count()).toBeGreaterThanOrEqual(28);
-	await page.locator('.month-day.today').click();
-	await page.waitForURL('**/?datum=*');
-	await expect(page.locator('h1')).toContainText('Wer ist im Raum?');
+	await expect(page.locator('.day-panel h2')).toContainText(/\d{2}\./);
+});
+
+test('Klick auf freien Tag öffnet den Eintragen-Dialog mit Datum', async ({ page }) => {
+	await page.goto('/');
+	await hydrated(page);
+	// Ein Tag weit in der Zukunft ist sicher frei
+	const freeDay = page.locator('.month-day:not(.outside)').last();
+	const date = (await freeDay.getAttribute('href'))?.split('tag=')[1] ?? '';
+	await freeDay.click();
+	await expect(page.locator('dialog[open]')).toBeVisible();
+	await expect(page.locator('dialog #date')).toHaveValue(date);
+	await page.click('dialog .button-quiet:has-text("Abbrechen")');
+	await expect(page.locator('dialog[open]')).toHaveCount(0);
 });
 
 test('ICS-Feed liefert Kalender mit Token und 403 ohne', async ({ page, request }) => {
@@ -72,7 +81,7 @@ test('Jetzt-Banner zeigt laufende öffentliche Belegung', async ({ page }, testI
 	await hydrated(page);
 	await page.click('summary');
 	await page.click('.button-danger');
-	await page.waitForURL('**/?datum=*');
+	await page.waitForURL('**/?tag=*');
 });
 
 test('Ruhezeiten-Hinweis steht im Formular', async ({ page }) => {

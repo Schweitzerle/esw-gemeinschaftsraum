@@ -55,8 +55,14 @@ Zentrale Bausteine und ihr Zusammenspiel:
   (`session.ts`, 180 Tage). Einträge gehören niemandem — Bearbeiten/Löschen nur über
   Edit-Token in der URL (32 Byte base64url, DB speichert nur SHA-256-Hash, `tokens.ts`).
   Der ICS-Feed-Token ist deterministisch aus `SESSION_SECRET` abgeleitet (`ics.ts`).
+- **UI-Fluss**: Startseite `/` = Monatskalender (`?tag=YYYY-MM-DD` wählt Tag und Monat)
+  mit Tages-Panel darunter. Eintragen läuft über `BookingDialog.svelte` (natives
+  `<dialog>`, im Layout gemountet, per Svelte-Context `booking-dialog` geöffnet; Klick
+  auf freien Tag öffnet ihn direkt mit Datum). Der Dialog postet an die Action von
+  `/neu` — diese Seite ist zugleich der No-JS-Fallback. Dialog-Inhalt wird nur bei
+  geöffnetem Dialog gerendert (sonst doppelte Feld-IDs mit `/neu`).
 - **Datensparsamkeit ist Design-Regel**: `+page.server.ts`-Loads geben nie `editTokenHash`
-  oder unnötige Felder an den Client (Wochenansicht: kein Kontakt/Zimmer — erst die
+  oder unnötige Felder an den Client (Übersicht: kein Kontakt/Zimmer — erst die
   Detailseite zeigt Kontakt); der ICS-Feed enthält nur Titel + Zeiten.
 
 ## Konventionen & Fallstricke

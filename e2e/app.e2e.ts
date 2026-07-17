@@ -70,11 +70,11 @@ test('kompletter Ablauf: anlegen → Übersicht → Detail → bearbeiten → l�
 	const date = inDays(3);
 	const title = `E2E-Feier ${testInfo.project.name}`;
 
-	// Anlegen (Session kommt aus dem Setup-Projekt)
+	// Anlegen über den Dialog (Session kommt aus dem Setup-Projekt)
 	await page.goto('/');
-	await page.click('a[href="/neu"]');
-	await page.waitForURL('**/neu');
 	await hydrated(page);
+	await page.click('.header-cta');
+	await expect(page.locator('dialog[open]')).toBeVisible();
 	await fillBookingForm(page, {
 		title,
 		date,
@@ -85,7 +85,7 @@ test('kompletter Ablauf: anlegen → Übersicht → Detail → bearbeiten → l�
 		contact: '0151 5555555'
 	});
 	await page.check('#isPublic');
-	await page.click('main button[type=submit]');
+	await page.click('dialog button[type=submit]');
 
 	// Erfolgsseite mit Edit-Link
 	await page.waitForURL('**/erstellt?token=*');
@@ -93,8 +93,8 @@ test('kompletter Ablauf: anlegen → Übersicht → Detail → bearbeiten → l�
 	const editUrl = await page.inputValue('#edit-link');
 	expect(editUrl).toMatch(/\/eintrag\/\d+\/bearbeiten\?token=[A-Za-z0-9_-]{43}$/);
 
-	// In der Wochenübersicht sichtbar
-	await page.goto(`/?datum=${date}`);
+	// Im Tages-Panel der Übersicht sichtbar
+	await page.goto(`/?tag=${date}`);
 	await expect(page.locator('.booking-card', { hasText: title })).toBeVisible();
 
 	// Detailansicht zeigt Kontakt und Zimmer
@@ -104,9 +104,11 @@ test('kompletter Ablauf: anlegen → Übersicht → Detail → bearbeiten → l�
 	await expect(page.locator('article')).toContainText('404');
 	await expect(page.locator('article')).toContainText('komm gern dazu');
 
-	// Überlappung wird verhindert
-	await page.goto('/neu');
+	// Überlappung wird verhindert (Dialog bleibt offen und zeigt den Konflikt)
+	await page.goto(`/?tag=${date}`);
 	await hydrated(page);
+	await page.click('.day-panel .button');
+	await expect(page.locator('dialog[open]')).toBeVisible();
 	await fillBookingForm(page, {
 		title: 'Kollision',
 		date,
@@ -116,8 +118,8 @@ test('kompletter Ablauf: anlegen → Übersicht → Detail → bearbeiten → l�
 		room: '1',
 		contact: '0000000'
 	});
-	await page.click('main button[type=submit]');
-	await expect(page.locator('.form-error')).toContainText(title);
+	await page.click('dialog button[type=submit]');
+	await expect(page.locator('dialog .form-error')).toContainText(title);
 
 	// Bearbeiten über den geheimen Link
 	await page.goto(editUrl);
@@ -137,7 +139,7 @@ test('kompletter Ablauf: anlegen → Übersicht → Detail → bearbeiten → l�
 	await hydrated(page);
 	await page.click('summary');
 	await page.click('.button-danger');
-	await page.waitForURL('**/?datum=*');
+	await page.waitForURL('**/?tag=*');
 	await expect(page.locator('.booking-card', { hasText: title })).toHaveCount(0);
 });
 
@@ -176,7 +178,7 @@ test('funktioniert ohne JavaScript (Progressive Enhancement)', async ({ browser 
 	await page.goto(editUrl);
 	await page.click('summary');
 	await page.click('.button-danger');
-	await page.waitForURL('**/?datum=*');
+	await page.waitForURL('**/?tag=*');
 	await expect(page.locator('.booking-card', { hasText: title })).toHaveCount(0);
 
 	await ctx.close();

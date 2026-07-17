@@ -5,9 +5,9 @@ Bewohner sehen auf einen Blick, wann der Raum frei ist, tragen sich selbst ein
 (ohne Account) und können ihren Eintrag über einen geheimen Link ändern oder löschen.
 Die ganze Seite liegt hinter einem gemeinsamen Haus-Passwort.
 
-| Mobil (hell)                                 | Mobil (dunkel)                                           | Desktop                                          |
-| -------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------ |
-| ![Wochenansicht mobil](docs/woche-mobil.png) | ![Wochenansicht mobil dunkel](docs/woche-mobil-dark.png) | ![Wochenansicht Desktop](docs/woche-desktop.png) |
+| Mobil (hell)                              | Mobil (dunkel)                                        | Desktop                                       | Eintragen-Dialog                              |
+| ----------------------------------------- | ----------------------------------------------------- | --------------------------------------------- | --------------------------------------------- |
+| ![Übersicht mobil](docs/uebersicht-mobil.png) | ![Übersicht mobil dunkel](docs/uebersicht-mobil-dark.png) | ![Übersicht Desktop](docs/uebersicht-desktop.png) | ![Eintragen-Dialog](docs/dialog-mobil.png) |
 
 **Stack:** SvelteKit (Svelte 5, TypeScript, `adapter-node`) · SQLite (`better-sqlite3` + Drizzle)
 · ein einzelner Node-Prozess, keine externen Dienste.
@@ -101,10 +101,13 @@ CI (GitHub Actions) fährt lint → check → unit → build und die E2E-Suite b
   Kein Tracking, keine externen CDNs/Fonts, ein einziges (Login-)Cookie. Details:
   `/datenschutz`.
 - **Rate-Limits** (in-memory): Login 10 Versuche / 15 min pro IP, Schreibaktionen 30 / min.
+- **Bedienung:** Startseite ist ein Monatskalender mit Tages-Panel. Ein Tipp auf einen
+  freien Tag öffnet direkt den Eintragen-Dialog mit vorbefülltem Datum; ohne JavaScript
+  fällt alles auf die Formular-Seite `/neu` zurück (Progressive Enhancement).
 - **Extras:** „Jetzt gerade"-Banner (läuft etwas? wann ist der Raum wieder frei?),
-  Monatsübersicht unter `/monat`, Ruhezeiten-Hinweis im Formular und ein read-only
-  **Kalender-Abo** (`/kalender.ics?token=…`, Link auf der Wochenansicht — enthält nur
-  Titel und Zeiten, keine Kontaktdaten). Hell- und Dunkel-Theme folgen dem System.
+  Ruhezeiten-Hinweis im Formular und ein read-only **Kalender-Abo**
+  (`/kalender.ics?token=…`, Link auf der Startseite — enthält nur Titel und Zeiten,
+  keine Kontaktdaten). Hell- und Dunkel-Theme folgen dem System.
 
 ## Offene Punkte
 

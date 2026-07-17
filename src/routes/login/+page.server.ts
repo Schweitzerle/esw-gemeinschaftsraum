@@ -1,4 +1,3 @@
-import { dev } from '$app/environment';
 import { fail, redirect } from '@sveltejs/kit';
 import { getConfig } from '$lib/server/env';
 import { loginLimiter } from '$lib/server/limiters';
@@ -44,11 +43,11 @@ export const actions: Actions = {
 		}
 
 		const expiresAtMs = Date.now() + SESSION_TTL_MS;
+		// secure überlässt SvelteKit dem Kontext: aus auf http://localhost, sonst an
 		cookies.set(SESSION_COOKIE, createSessionValue(config.sessionSecret, expiresAtMs), {
 			path: '/',
 			httpOnly: true,
 			sameSite: 'lax',
-			secure: !dev,
 			maxAge: SESSION_TTL_MS / 1000
 		});
 

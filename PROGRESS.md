@@ -28,7 +28,8 @@ Anforderungen: siehe lokale `PROMPT.md` (nicht im Repo) bzw. README.
 - [x] Playwright-E2E: 16 Tests (mobil+desktop, No-JS-Flow, axe-A11y) — alle grün
 - [x] Prod-Smoke mit `node build` (Gate, Login, CSP, ENV-Abbruch geprüft)
 - [x] README-Betriebsanleitung, Dockerfile + compose.yml, Screenshots in docs/
-- [x] Phase 2: Jetzt-Banner + „Frei bis", Ruhezeiten-Hinweis, Monatsübersicht `/monat`, ICS-Feed `/kalender.ics?token=…` (Token = HMAC aus SESSION_SECRET) — E2E: 25 Tests grün
+- [x] Phase 2: Jetzt-Banner + „Frei bis", Ruhezeiten-Hinweis, Monatsübersicht, ICS-Feed `/kalender.ics?token=…` (Token = HMAC aus SESSION_SECRET)
+- [x] UX-Refactor nach Nutzer-Feedback (17.07.2026): Monat ist jetzt die Startansicht `/` (`?tag=` statt Wochenansicht/`?datum=`), Tages-Panel darunter, Klick auf freien Tag öffnet den Eintragen-Dialog (`BookingDialog.svelte`, No-JS-Fallback `/neu`), Login-Overflow gefixt, Cookie-`secure` via Kit-Default (localhost-http erlaubt) — E2E: 29 Tests grün
 - [ ] Abschluss: CLAUDE.md (/init), Bericht + WhatsApp-Text — Task 10
 
 ## Nächste Schritte

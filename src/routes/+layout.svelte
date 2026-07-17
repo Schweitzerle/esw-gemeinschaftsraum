@@ -2,11 +2,20 @@
 	import '@fontsource-variable/fraunces/index.css';
 	import '@fontsource-variable/nunito-sans/index.css';
 	import '../app.css';
+	import { setContext } from 'svelte';
 	import { page } from '$app/state';
+	import BookingDialog from '$lib/components/BookingDialog.svelte';
+	import { todayInBerlin } from '$lib/time';
 
 	let { children } = $props();
 
 	const isLoginPage = $derived(page.url.pathname === '/login');
+
+	// Seiten (z. B. der Kalender) öffnen den Eintragen-Dialog über diesen Context
+	let dialog = $state<BookingDialog>();
+	setContext('booking-dialog', {
+		open: (date: string) => dialog?.open(date)
+	});
 
 	// Marker für E2E-Tests: erst nach der Hydration in Formulare tippen
 	$effect(() => {
@@ -27,7 +36,16 @@
 				<span class="site-logo" aria-hidden="true">🛋️</span>
 				<span>Gemeinschaftsraum</span>
 			</a>
-			<a href="/neu" class="button header-cta">+ Eintragen</a>
+			<a
+				href="/neu"
+				class="button header-cta"
+				onclick={(e) => {
+					e.preventDefault();
+					dialog?.open(todayInBerlin());
+				}}
+			>
+				+ Eintragen
+			</a>
 		</header>
 
 		<main class="site-main">
@@ -39,6 +57,8 @@
 			<a href="/datenschutz">Datenschutz</a>
 		</footer>
 	</div>
+
+	<BookingDialog bind:this={dialog} />
 {/if}
 
 <style>

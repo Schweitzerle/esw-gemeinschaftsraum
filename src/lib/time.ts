@@ -5,8 +5,6 @@ import { de } from 'date-fns/locale';
 /** Alle Anzeige- und Eingabezeiten beziehen sich auf die Hauszeit. */
 export const TIME_ZONE = 'Europe/Berlin';
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-
 function parseDateParts(date: string): [number, number, number] {
 	const [year, month, day] = date.split('-').map(Number);
 	return [year, month, day];
@@ -63,11 +61,6 @@ export function formatDate(ms: number): string {
 	return format(tz(ms), 'dd.MM.yyyy');
 }
 
-/** „13. Juli" */
-export function formatDayMonth(ms: number): string {
-	return format(tz(ms), 'd. MMMM', { locale: de });
-}
-
 /** ISO-Datum (YYYY-MM-DD) eines Zeitpunkts in Berliner Zeit. */
 export function toBerlinDate(ms: number): string {
 	return format(tz(ms), 'yyyy-MM-dd');
@@ -87,23 +80,7 @@ export interface DayInfo {
 	endMs: number;
 }
 
-/** Die 7 Tage (Mo–So) der Woche, in der das Datum liegt. */
-export function weekDays(date: string): DayInfo[] {
-	const [year, month, day] = parseDateParts(date);
-	const noon = new TZDate(year, month - 1, day, 12, 0, TIME_ZONE);
-	const monday = startOfWeek(noon, { weekStartsOn: 1 });
-	return Array.from({ length: 7 }, (_, i) => {
-		const dayDate = format(addDays(monday, i), 'yyyy-MM-dd');
-		const nextDate = format(addDays(monday, i + 1), 'yyyy-MM-dd');
-		return {
-			date: dayDate,
-			startMs: berlinDateTimeToMs(dayDate, '00:00'),
-			endMs: berlinDateTimeToMs(nextDate, '00:00')
-		};
-	});
-}
-
-/** Verschiebt ein ISO-Datum um n Tage (für Wochen-Navigation). */
+/** Verschiebt ein ISO-Datum um n Tage. */
 export function shiftDate(date: string, days: number): string {
 	const [year, month, day] = parseDateParts(date);
 	const noon = new TZDate(year, month - 1, day, 12, 0, TIME_ZONE);
@@ -155,5 +132,3 @@ export function shiftMonth(date: string, months: number): string {
 	const [year, month] = parseDateParts(date);
 	return format(new TZDate(year, month - 1 + months, 1, 12, 0, TIME_ZONE), 'yyyy-MM-dd');
 }
-
-export { DAY_MS };

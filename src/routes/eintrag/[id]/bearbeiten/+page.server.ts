@@ -95,6 +95,6 @@ export const actions: Actions = {
 			error(403, 'Dieser Bearbeitungs-Link ist ungültig.');
 		}
 
-		redirect(303, `/?datum=${toBerlinDate(booking.startsAt)}`);
+		redirect(303, `/?tag=${toBerlinDate(booking.startsAt)}`);
 	}
 };
