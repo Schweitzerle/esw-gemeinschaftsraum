@@ -1,5 +1,6 @@
 import { building } from '$app/environment';
 import { redirect, type Handle } from '@sveltejs/kit';
+import { startCleanupJob } from '$lib/server/cleanup';
 import { getDb } from '$lib/server/db';
 import { getConfig } from '$lib/server/env';
 import { startLimiterPruning } from '$lib/server/limiters';
@@ -13,6 +14,7 @@ if (!building) {
 	getConfig();
 	getDb();
 	startLimiterPruning();
+	startCleanupJob();
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
