@@ -14,8 +14,8 @@
 	<div class="login-card">
 		<h1>Gemeinschaftsraum</h1>
 		<p class="login-intro">
-			Hier siehst du, wann unser Gemeinschaftsraum belegt ist, und kannst dich selbst eintragen.
-			Das Passwort steht in der WhatsApp-Gruppe des Hauses.
+			Hier siehst du, wann unser Gemeinschaftsraum belegt ist, und kannst dich selbst eintragen. Das
+			Passwort steht in der WhatsApp-Gruppe des Hauses.
 		</p>
 
 		<form

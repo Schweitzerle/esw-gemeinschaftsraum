@@ -38,7 +38,8 @@ export const actions: Actions = {
 
 		if (!verifyPassword(passwort, config.hausPasswort)) {
 			return fail(400, {
-				error: 'Das Passwort stimmt leider nicht. Das aktuelle Passwort steht in der WhatsApp-Gruppe.'
+				error:
+					'Das Passwort stimmt leider nicht. Das aktuelle Passwort steht in der WhatsApp-Gruppe.'
 			});
 		}
 
