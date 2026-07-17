@@ -63,6 +63,11 @@ export function formatDate(ms: number): string {
 	return format(tz(ms), 'dd.MM.yyyy');
 }
 
+/** „13. Juli" */
+export function formatDayMonth(ms: number): string {
+	return format(tz(ms), 'd. MMMM', { locale: de });
+}
+
 /** ISO-Datum (YYYY-MM-DD) eines Zeitpunkts in Berliner Zeit. */
 export function toBerlinDate(ms: number): string {
 	return format(tz(ms), 'yyyy-MM-dd');

@@ -1,0 +1,75 @@
+/* Design-Tokens — warme, gemeinschaftliche Richtung („Wohnzimmer statt Amt") */
+
+:root {
+	/* Farben (hell) */
+	--color-bg: oklch(96.5% 0.014 85);
+	--color-surface: oklch(99% 0.007 90);
+	--color-surface-raised: oklch(100% 0 0);
+	--color-text: oklch(28% 0.025 55);
+	--color-text-soft: oklch(45% 0.02 55);
+	--color-border: oklch(88% 0.015 80);
+	--color-accent: oklch(58% 0.13 40);
+	--color-accent-strong: oklch(50% 0.14 38);
+	--color-accent-soft: oklch(93% 0.03 45);
+	--color-on-accent: oklch(99% 0.005 90);
+	--color-free: oklch(55% 0.09 150);
+	--color-free-soft: oklch(94% 0.035 150);
+	--color-error: oklch(52% 0.17 25);
+	--color-error-soft: oklch(94% 0.03 25);
+	--color-focus: oklch(55% 0.15 250);
+
+	/* Typografie */
+	--font-display: 'Fraunces Variable', Georgia, serif;
+	--font-body: 'Nunito Sans Variable', system-ui, sans-serif;
+	--text-sm: clamp(0.82rem, 0.79rem + 0.15vw, 0.9rem);
+	--text-base: clamp(1rem, 0.95rem + 0.25vw, 1.1rem);
+	--text-lg: clamp(1.15rem, 1.08rem + 0.35vw, 1.35rem);
+	--text-xl: clamp(1.45rem, 1.3rem + 0.75vw, 1.9rem);
+	--text-hero: clamp(1.9rem, 1.5rem + 2vw, 3rem);
+
+	/* Abstände & Radien */
+	--space-1: 0.25rem;
+	--space-2: 0.5rem;
+	--space-3: 0.75rem;
+	--space-4: 1rem;
+	--space-6: 1.5rem;
+	--space-8: 2rem;
+	--space-section: clamp(2rem, 1.5rem + 2.5vw, 4rem);
+	--radius-sm: 8px;
+	--radius-md: 14px;
+	--radius-lg: 22px;
+
+	--shadow-card: 0 1px 2px oklch(30% 0.03 55 / 0.06), 0 4px 16px oklch(30% 0.03 55 / 0.07);
+	--shadow-raised: 0 2px 6px oklch(30% 0.03 55 / 0.09), 0 12px 32px oklch(30% 0.03 55 / 0.12);
+
+	--duration-fast: 150ms;
+	--duration-normal: 280ms;
+	--ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+	color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--color-bg: oklch(21% 0.012 60);
+		--color-surface: oklch(25.5% 0.014 60);
+		--color-surface-raised: oklch(29% 0.016 60);
+		--color-text: oklch(93% 0.012 80);
+		--color-text-soft: oklch(72% 0.015 75);
+		--color-border: oklch(35% 0.018 60);
+		--color-accent: oklch(72% 0.12 45);
+		--color-accent-strong: oklch(78% 0.12 48);
+		--color-accent-soft: oklch(32% 0.045 45);
+		--color-on-accent: oklch(20% 0.03 45);
+		--color-free: oklch(75% 0.1 150);
+		--color-free-soft: oklch(30% 0.04 150);
+		--color-error: oklch(72% 0.14 25);
+		--color-error-soft: oklch(30% 0.05 25);
+		--color-focus: oklch(75% 0.12 250);
+
+		--shadow-card: 0 1px 2px oklch(0% 0 0 / 0.25), 0 4px 16px oklch(0% 0 0 / 0.3);
+		--shadow-raised: 0 2px 6px oklch(0% 0 0 / 0.3), 0 12px 32px oklch(0% 0 0 / 0.4);
+
+		color-scheme: dark;
+	}
+}
