@@ -37,10 +37,7 @@
 	let confirming = $state(false);
 
 	// „Gehört mir" wird aus dem localStorage dieses Geräts abgeleitet
-	let mine = $state(false);
-	$effect(() => {
-		mine = isMyBooking(booking.id);
-	});
+	const mine = $derived(isMyBooking(booking.id));
 
 	// Bearbeiten öffnet denselben Dialog wie das Erstellen, vorbefüllt — kein Seitenwechsel
 	function startEdit(): void {
