@@ -62,11 +62,15 @@ Zentrale Bausteine und ihr Zusammenspiel:
 - **UI-Fluss**: Startseite `/` = Monatskalender (`?tag=YYYY-MM-DD` wählt Tag und Monat)
   mit Tages-Panel darunter. Eintragen läuft über `BookingDialog.svelte` (natives
   `<dialog>`, im Layout gemountet, per Svelte-Context `booking-dialog` geöffnet; Klick
-  auf freien künftigen Tag öffnet ihn direkt mit Datum). Der Dialog postet an die Action
-  von `/neu` — diese Seite ist zugleich der No-JS-Fallback. Dialog-Inhalt wird nur bei
-  geöffnetem Dialog gerendert (sonst doppelte Feld-IDs mit `/neu`). Eintrag-Details
-  öffnen als `DetailDialog` via Shallow Routing (`preloadData` + `pushState`,
-  `page.state.detail`); `/eintrag/[id]` bleibt als Fallback/Direktlink. Datum/Uhrzeit
+  auf freien künftigen Tag öffnet ihn direkt mit Datum). Derselbe Dialog dient auch dem
+  **Bearbeiten** (`openEdit`): „Bearbeiten" im Detail-Dialog öffnet ihn vorbefüllt und
+  postet dann an die `speichern`-Action von `/eintrag/[id]/bearbeiten` statt an `/neu`;
+  bei Erfolg kein Seitenwechsel, sondern `invalidateAll` + Toast. Context + Typen +
+  `bookingToEditValues` in `$lib/booking-dialog.ts`. Die Seiten `/neu` und
+  `/eintrag/[id]/bearbeiten` bleiben als No-JS-Fallback. Dialog-Inhalt wird nur bei
+  geöffnetem Dialog gerendert (sonst doppelte Feld-IDs). Eintrag-Details öffnen als
+  `DetailDialog` via Shallow Routing (`preloadData` + `pushState`, `page.state.detail`);
+  `/eintrag/[id]` bleibt als Fallback/Direktlink. Datum/Uhrzeit
   sind eigene Komponenten (`DateField` mit nativem Input vor der Hydration,
   `TimeSelect` im 30-min-Raster — die Vergangenheits-Kulanz ist deshalb 30 min). Leere
   Endzeit = „offenes Ende" (`openEnd`-Spalte, 4 h reserviert). Fehler-Meldungen der

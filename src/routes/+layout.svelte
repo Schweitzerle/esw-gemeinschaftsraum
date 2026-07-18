@@ -4,6 +4,11 @@
 	import '../app.css';
 	import { setContext } from 'svelte';
 	import { page } from '$app/state';
+	import {
+		BOOKING_DIALOG_KEY,
+		type BookingDialogContext,
+		type EditPayload
+	} from '$lib/booking-dialog';
 	import BookingDialog from '$lib/components/BookingDialog.svelte';
 	import IcsDialog from '$lib/components/IcsDialog.svelte';
 	import Toasts from '$lib/components/Toasts.svelte';
@@ -15,11 +20,12 @@
 	const isLoginPage = $derived(page.url.pathname === '/login');
 	const icsUrl = $derived(data.icsPath ? new URL(data.icsPath, page.url.origin).href : null);
 
-	// Seiten (z. B. der Kalender) öffnen den Eintragen-Dialog über diesen Context
+	// Seiten öffnen den Eintragen-/Bearbeiten-Dialog über diesen Context
 	let dialog = $state<BookingDialog>();
 	let icsDialog = $state<IcsDialog>();
-	setContext('booking-dialog', {
-		open: (date: string) => dialog?.open(date)
+	setContext<BookingDialogContext>(BOOKING_DIALOG_KEY, {
+		open: (date: string) => dialog?.open(date),
+		openEdit: (payload: EditPayload) => dialog?.openEdit(payload)
 	});
 
 	// Marker für E2E-Tests: erst nach der Hydration in Formulare tippen

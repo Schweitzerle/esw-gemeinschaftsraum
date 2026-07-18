@@ -1,6 +1,12 @@
 <script lang="ts">
+	import { getContext } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
+	import {
+		BOOKING_DIALOG_KEY,
+		bookingToEditValues,
+		type BookingDialogContext
+	} from '$lib/booking-dialog';
 	import { forgetBooking, isMyBooking, tokenForBooking } from '$lib/my-bookings';
 	import { addToast } from '$lib/toast.svelte';
 	import { formatDate, formatDayLong, formatTime, toBerlinDate } from '$lib/time';
@@ -25,17 +31,25 @@
 
 	let { booking, onclose }: Props = $props();
 
+	const bookingDialog = getContext<BookingDialogContext>(BOOKING_DIALOG_KEY);
+
 	let dialogEl: HTMLDialogElement;
 	let confirming = $state(false);
 
 	// „Gehört mir" wird aus dem localStorage dieses Geräts abgeleitet
 	let mine = $state(false);
-	let editHref = $state('');
 	$effect(() => {
 		mine = isMyBooking(booking.id);
-		const token = tokenForBooking(booking.id);
-		editHref = token ? `/eintrag/${booking.id}/bearbeiten?token=${token}` : '';
 	});
+
+	// Bearbeiten öffnet denselben Dialog wie das Erstellen, vorbefüllt — kein Seitenwechsel
+	function startEdit(): void {
+		const token = tokenForBooking(booking.id);
+		if (!token) return;
+		const payload = { id: booking.id, token, values: bookingToEditValues(booking) };
+		dialogEl.close();
+		bookingDialog.openEdit(payload);
+	}
 
 	$effect(() => {
 		dialogEl.showModal();
@@ -120,7 +134,7 @@
 			}}
 		>
 			{#if mine}
-				<a href={editHref} class="button">Bearbeiten</a>
+				<button type="button" class="button" onclick={startEdit}>Bearbeiten</button>
 				<button type="submit" class="button-danger">Löschen</button>
 			{:else if confirming}
 				<p class="confirm-text">

@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import { enhance } from '$app/forms';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
+	import type { EditPayload } from '$lib/booking-dialog';
 	import BookingFormFields from '$lib/components/BookingFormFields.svelte';
 	import { addToast } from '$lib/toast.svelte';
 	import type { FieldErrors } from '$lib/validation/booking';
@@ -11,16 +12,39 @@
 	let submitting = $state(false);
 	// Inhalt nur bei offenem Dialog rendern, damit die Feld-IDs die /neu-Seite nicht doppeln
 	let isOpen = $state(false);
+	let mode = $state<'create' | 'edit'>('create');
+	let editTarget = $state<{ id: number; token: string } | undefined>(undefined);
 	let values = $state<Record<string, string>>({});
 	let fieldErrors = $state<FieldErrors>({});
 	let formError = $state<string | undefined>(undefined);
 
-	export function open(date: string): void {
-		values = { date };
+	// Beim Bearbeiten postet das Formular an die speichern-Action des Eintrags,
+	// beim Erstellen an /neu — beide liefern dieselbe Erfolgs-/Fehlerform.
+	const action = $derived(
+		mode === 'edit' && editTarget
+			? `/eintrag/${editTarget.id}/bearbeiten?/speichern&token=${editTarget.token}`
+			: '/neu'
+	);
+
+	function reset(): void {
 		fieldErrors = {};
 		formError = undefined;
 		isOpen = true;
 		dialogEl.showModal();
+	}
+
+	export function open(date: string): void {
+		mode = 'create';
+		editTarget = undefined;
+		values = { date };
+		reset();
+	}
+
+	export function openEdit(payload: EditPayload): void {
+		mode = 'edit';
+		editTarget = { id: payload.id, token: payload.token };
+		values = payload.values;
+		reset();
 	}
 
 	function close(): void {
@@ -42,7 +66,9 @@
 	{#if isOpen}
 		<div class="dialog-body" bind:this={bodyEl}>
 			<header>
-				<h2 id="dialog-titel">Raum reservieren</h2>
+				<h2 id="dialog-titel">
+					{mode === 'edit' ? 'Eintrag bearbeiten' : 'Raum reservieren'}
+				</h2>
 				<button
 					type="button"
 					class="button-quiet close-button"
@@ -55,14 +81,21 @@
 
 			<form
 				method="post"
-				action="/neu"
+				{action}
 				use:enhance={() => {
 					submitting = true;
 					return async ({ result }) => {
 						submitting = false;
 						if (result.type === 'redirect') {
-							close();
-							await goto(result.location);
+							if (mode === 'edit') {
+								// Auf dem Kalender bleiben, nicht zur Detailseite springen
+								close();
+								await invalidateAll();
+								addToast('Änderungen gespeichert.', 'success');
+							} else {
+								close();
+								await goto(result.location);
+							}
 						} else if (result.type === 'failure' && result.data) {
 							values = (result.data.values as Record<string, string>) ?? values;
 							fieldErrors = (result.data.fieldErrors as FieldErrors) ?? {};
@@ -89,7 +122,13 @@
 
 				<div class="dialog-actions">
 					<button type="submit" disabled={submitting}>
-						{submitting ? 'Wird gespeichert …' : 'Eintragen'}
+						{#if submitting}
+							Wird gespeichert …
+						{:else if mode === 'edit'}
+							Änderungen speichern
+						{:else}
+							Eintragen
+						{/if}
 					</button>
 					<button type="button" class="button-quiet" onclick={close}>Abbrechen</button>
 				</div>

@@ -101,17 +101,18 @@ test('kompletter Ablauf: anlegen → Übersicht → Detail → bearbeiten → l�
 	await expect(page.locator('dialog[open]')).toContainText('0151 5555555');
 	await expect(page.locator('dialog[open]')).toContainText('komm gern dazu');
 	await expect(page).toHaveURL(/\/eintrag\/\d+/);
-	await expect(page.locator('dialog[open] a', { hasText: 'Bearbeiten' })).toBeVisible();
+	await expect(page.locator('dialog[open] button', { hasText: 'Bearbeiten' })).toBeVisible();
 
-	// Bearbeiten direkt aus dem Dialog (kein gespeicherter Link nötig)
-	await page.click('dialog[open] a:has-text("Bearbeiten")');
-	await page.waitForURL('**/bearbeiten?token=*');
-	await hydrated(page);
-	await page.fill('#title', `${title} (geändert)`);
-	await page.click('main form button[type=submit]');
-	await page.waitForURL('**/eintrag/*?gespeichert=1');
-	await expect(page.locator('.saved-notice')).toBeVisible();
-	await expect(page.locator('h1')).toContainText('(geändert)');
+	// Bearbeiten öffnet denselben Dialog, vorbefüllt – kein Seitenwechsel
+	await page.click('dialog[open] button:has-text("Bearbeiten")');
+	await expect(page.locator('dialog[open] h2')).toContainText('Eintrag bearbeiten');
+	await expect(page.locator('dialog[open] #title')).toHaveValue(title);
+	await page.fill('dialog[open] #title', `${title} (geändert)`);
+	await page.click('dialog[open] button:has-text("Änderungen speichern")');
+	// Dialog schließt, Kalender bleibt, Erfolgs-Toast, geänderter Titel sichtbar
+	await expect(page.locator('dialog[open]')).toHaveCount(0);
+	await expect(page.locator('.toast-success')).toBeVisible();
+	await expect(page.locator('.booking-card', { hasText: `${title} (geändert)` })).toBeVisible();
 
 	// Überlappung wird verhindert (Dialog bleibt offen, Konflikt als Toast + Meldung)
 	await page.goto(`/?tag=${date}`);
