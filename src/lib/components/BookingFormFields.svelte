@@ -67,7 +67,7 @@
 		<label for="endTime">
 			Bis
 			<InfoTip
-				text="Ohne Endzeit gilt „offenes Ende“ – wir reservieren dann 6 Stunden. Endet ihr nach Mitternacht, wähl einfach die Uhrzeit am Folgetag."
+				text="Ohne Endzeit gilt „offenes Ende“ – wir reservieren dann 4 Stunden. Endet ihr nach Mitternacht, wähl einfach die Uhrzeit am Folgetag."
 			/>
 		</label>
 		<TimeSelect

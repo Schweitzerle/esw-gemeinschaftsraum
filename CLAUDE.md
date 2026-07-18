@@ -65,7 +65,7 @@ Zentrale Bausteine und ihr Zusammenspiel:
   `page.state.detail`); `/eintrag/[id]` bleibt als Fallback/Direktlink. Datum/Uhrzeit
   sind eigene Komponenten (`DateField` mit nativem Input vor der Hydration,
   `TimeSelect` im 30-min-Raster — die Vergangenheits-Kulanz ist deshalb 30 min). Leere
-  Endzeit = „offenes Ende" (`openEnd`-Spalte, 6 h reserviert). Fehler-Meldungen der
+  Endzeit = „offenes Ende" (`openEnd`-Spalte, 4 h reserviert). Fehler-Meldungen der
   Actions laufen zusätzlich als Toast (`$lib/toast.svelte.ts`).
 - **Datensparsamkeit ist Design-Regel**: `+page.server.ts`-Loads geben nie `editTokenHash`
   oder unnötige Felder an den Client (Übersicht: kein Kontakt/Zimmer — erst die

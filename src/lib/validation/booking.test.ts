@@ -105,12 +105,12 @@ describe('validateBookingForm', () => {
 		expect(result.data.name).toBe('Julia');
 	});
 
-	test('leere Endzeit bedeutet offenes Ende (6 Stunden reserviert)', () => {
+	test('leere Endzeit bedeutet offenes Ende (4 Stunden reserviert)', () => {
 		const result = validateBookingForm(validForm({ endTime: '' }), NOW);
 		expect(result.success).toBe(true);
 		if (!result.success) return;
 		expect(result.data.openEnd).toBe(true);
-		expect(result.data.endsAt - result.data.startsAt).toBe(6 * 60 * 60 * 1000);
+		expect(result.data.endsAt - result.data.startsAt).toBe(4 * 60 * 60 * 1000);
 	});
 
 	test('gesetzte Endzeit bedeutet kein offenes Ende', () => {

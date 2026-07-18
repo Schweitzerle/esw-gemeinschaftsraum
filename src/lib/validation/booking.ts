@@ -6,7 +6,7 @@ export const MAX_ADVANCE_DAYS = 92;
 /** Maximale Dauer einer Buchung */
 export const MAX_DURATION_MS = 12 * 60 * 60 * 1000;
 /** Ohne Endzeit („offenes Ende") wird der Raum so lange reserviert */
-export const OPEN_END_DURATION_MS = 6 * 60 * 60 * 1000;
+export const OPEN_END_DURATION_MS = 4 * 60 * 60 * 1000;
 /** Kulanz für „gerade eben begonnene" Buchungen (Zeitauswahl hat 30-min-Raster) */
 export const PAST_GRACE_MS = 30 * 60 * 1000;
 
@@ -72,7 +72,7 @@ function toRecord(form: FormData | Record<string, unknown>): Record<string, unkn
 
 /**
  * Validiert die Formulareingaben für einen Belegungseintrag und berechnet
- * den Zeitraum in Unix-ms. Ohne Endzeit gilt „offenes Ende" (6 h reserviert).
+ * den Zeitraum in Unix-ms. Ohne Endzeit gilt „offenes Ende" (4 h reserviert).
  * Alle Meldungen sind deutsch und feldbezogen.
  */
 export function validateBookingForm(

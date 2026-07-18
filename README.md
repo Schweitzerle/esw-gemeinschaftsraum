@@ -105,7 +105,7 @@ CI (GitHub Actions) fährt lint → check → unit → build und die E2E-Suite b
   freien (künftigen) Tag öffnet direkt den Eintragen-Dialog mit vorbefülltem Datum,
   Einträge öffnen sich als Detail-Dialog; ohne JavaScript fällt alles auf eigene Seiten
   zurück (Progressive Enhancement). Datum/Uhrzeit sind eigene deutsche Picker
-  (30-min-Raster); die Endzeit ist optional – ohne sie gilt „offenes Ende" (6 h
+  (30-min-Raster); die Endzeit ist optional – ohne sie gilt „offenes Ende" (4 h
   reserviert). Fehler wie Belegungskonflikte erscheinen als Toast.
 - **Extras:** „Jetzt gerade"-Banner (läuft etwas? wann ist der Raum wieder frei?),
   Ruhezeiten-Hinweis im Formular und ein read-only **Kalender-Abo**
