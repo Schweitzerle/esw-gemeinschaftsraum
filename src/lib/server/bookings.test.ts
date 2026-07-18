@@ -5,6 +5,7 @@ import {
 	cleanupOldBookings,
 	createBooking,
 	deleteBooking,
+	deleteBookingById,
 	getBookingById,
 	listBookingsBetween,
 	updateBooking,
@@ -178,6 +179,15 @@ describe('deleteBooking', () => {
 		expect(getBookingById(db, created.booking.id)).toBeDefined();
 		expect(deleteBooking(db, created.booking.id, created.editToken)).toBe(true);
 		expect(getBookingById(db, created.booking.id)).toBeUndefined();
+	});
+
+	test('deleteBookingById löscht ohne Token', () => {
+		const created = createBooking(db, input(), NOW);
+		if (!created.ok) throw new Error('setup');
+		expect(deleteBookingById(db, created.booking.id)).toBe(true);
+		expect(getBookingById(db, created.booking.id)).toBeUndefined();
+		// zweiter Aufruf: nichts mehr zu löschen
+		expect(deleteBookingById(db, created.booking.id)).toBe(false);
 	});
 });
 

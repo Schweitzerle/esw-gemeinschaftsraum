@@ -1,7 +1,12 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
+	import { forgetBooking, isMyBooking, tokenForBooking } from '$lib/my-bookings';
+	import { addToast } from '$lib/toast.svelte';
 	import { formatDate, formatDayLong, formatTime, toBerlinDate } from '$lib/time';
 
 	interface DetailBooking {
+		id: number;
 		title: string;
 		description: string | null;
 		name: string;
@@ -21,6 +26,16 @@
 	let { booking, onclose }: Props = $props();
 
 	let dialogEl: HTMLDialogElement;
+	let confirming = $state(false);
+
+	// „Gehört mir" wird aus dem localStorage dieses Geräts abgeleitet
+	let mine = $state(false);
+	let editHref = $state('');
+	$effect(() => {
+		mine = isMyBooking(booking.id);
+		const token = tokenForBooking(booking.id);
+		editHref = token ? `/eintrag/${booking.id}/bearbeiten?token=${token}` : '';
+	});
 
 	$effect(() => {
 		dialogEl.showModal();
@@ -86,9 +101,52 @@
 			{/if}
 		</dl>
 
+		<form
+			class="detail-actions"
+			method="post"
+			action="/eintrag/{booking.id}?/loeschen"
+			use:enhance={() => {
+				return async ({ result }) => {
+					if (result.type === 'redirect') {
+						forgetBooking(booking.id);
+						await goto(result.location, { invalidateAll: true });
+					} else if (result.type === 'failure') {
+						addToast(
+							(result.data?.formError as string) ?? 'Löschen hat leider nicht geklappt.',
+							'error'
+						);
+					}
+				};
+			}}
+		>
+			{#if mine}
+				<a href={editHref} class="button">Bearbeiten</a>
+				<button type="submit" class="button-danger">Löschen</button>
+			{:else if confirming}
+				<p class="confirm-text">
+					Das ist {booking.name}s Eintrag – wirklich löschen? Bitte nur, wenn ihr euch einig seid.
+				</p>
+				<div class="confirm-buttons">
+					<button type="submit" class="button-danger">Ja, löschen</button>
+					<button type="button" class="button-quiet" onclick={() => (confirming = false)}>
+						Abbrechen
+					</button>
+				</div>
+			{:else}
+				<button type="button" class="button-quiet" onclick={() => (confirming = true)}>
+					Eintrag löschen
+				</button>
+			{/if}
+		</form>
+
 		<footer>
-			Eingetragen am {formatDate(booking.createdAt)}. Dein Eintrag? Ändern und Löschen geht mit
-			deinem geheimen Bearbeitungs-Link.
+			Eingetragen am {formatDate(booking.createdAt)}.
+			{#if mine}
+				Das ist dein Eintrag – dieses Gerät hat ihn gespeichert.
+			{:else}
+				Dein Eintrag? Dann findest du Bearbeiten & Löschen auf dem Handy, mit dem du ihn angelegt
+				hast.
+			{/if}
 		</footer>
 	</div>
 </dialog>
@@ -193,6 +251,29 @@
 	.hint {
 		color: var(--color-text-soft);
 		font-size: var(--text-sm);
+	}
+
+	.detail-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+		align-items: center;
+	}
+
+	.confirm-text {
+		flex-basis: 100%;
+		font-size: var(--text-sm);
+		font-weight: 600;
+		color: var(--color-error);
+		background: var(--color-error-soft);
+		border-radius: var(--radius-sm);
+		padding: var(--space-2) var(--space-3);
+	}
+
+	.confirm-buttons {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
 	}
 
 	footer {

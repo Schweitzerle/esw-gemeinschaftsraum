@@ -52,9 +52,13 @@ Zentrale Bausteine und ihr Zusammenspiel:
   in EINER Transaktion (`findConflict` mit `startsAt < end AND endsAt > start`); angrenzende
   Zeiten kollidieren nicht. Konfliktergebnis enthält den störenden Eintrag für die Meldung.
 - **Auth ohne Accounts**: ein Haus-Passwort (ENV) → HMAC-signiertes Cookie `expiry.sig`
-  (`session.ts`, 180 Tage). Einträge gehören niemandem — Bearbeiten/Löschen nur über
-  Edit-Token in der URL (32 Byte base64url, DB speichert nur SHA-256-Hash, `tokens.ts`).
-  Der ICS-Feed-Token ist deterministisch aus `SESSION_SECRET` abgeleitet (`ics.ts`).
+  (`session.ts`, 180 Tage). Beim Erstellen entsteht ein Edit-Token (32 Byte base64url,
+  DB speichert nur SHA-256-Hash, `tokens.ts`). Das Gerät merkt sich `{id: token}` im
+  localStorage (`$lib/my-bookings.ts`) → eigene Einträge zeigen im Detail-Dialog direkt
+  Bearbeiten/Löschen. **Bearbeiten** verlangt das Token (`/eintrag/[id]/bearbeiten`);
+  **Löschen** darf jeder Angemeldete ohne Token (`deleteBookingById`, Auth-Guard reicht,
+  Notnagel) — fremde Einträge nur nach einer Bestätigung im UI. Der ICS-Feed-Token ist
+  deterministisch aus `SESSION_SECRET` abgeleitet (`ics.ts`).
 - **UI-Fluss**: Startseite `/` = Monatskalender (`?tag=YYYY-MM-DD` wählt Tag und Monat)
   mit Tages-Panel darunter. Eintragen läuft über `BookingDialog.svelte` (natives
   `<dialog>`, im Layout gemountet, per Svelte-Context `booking-dialog` geöffnet; Klick

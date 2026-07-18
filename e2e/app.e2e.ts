@@ -95,15 +95,27 @@ test('kompletter Ablauf: anlegen → Übersicht → Detail → bearbeiten → l�
 	await hydrated(page);
 	await expect(page.locator('.booking-card', { hasText: title })).toBeVisible();
 
-	// Detail-Dialog zeigt Kontakt (Shallow Routing, URL wechselt mit)
+	// Detail-Dialog zeigt Kontakt und – weil dieses Gerät den Eintrag angelegt hat –
+	// direkt Bearbeiten/Löschen (Shallow Routing, URL wechselt mit)
 	await page.locator('.booking-card', { hasText: title }).click();
 	await expect(page.locator('dialog[open]')).toContainText('0151 5555555');
 	await expect(page.locator('dialog[open]')).toContainText('komm gern dazu');
 	await expect(page).toHaveURL(/\/eintrag\/\d+/);
-	await page.goBack();
-	await expect(page.locator('dialog[open]')).toHaveCount(0);
+	await expect(page.locator('dialog[open] a', { hasText: 'Bearbeiten' })).toBeVisible();
+
+	// Bearbeiten direkt aus dem Dialog (kein gespeicherter Link nötig)
+	await page.click('dialog[open] a:has-text("Bearbeiten")');
+	await page.waitForURL('**/bearbeiten?token=*');
+	await hydrated(page);
+	await page.fill('#title', `${title} (geändert)`);
+	await page.click('main form button[type=submit]');
+	await page.waitForURL('**/eintrag/*?gespeichert=1');
+	await expect(page.locator('.saved-notice')).toBeVisible();
+	await expect(page.locator('h1')).toContainText('(geändert)');
 
 	// Überlappung wird verhindert (Dialog bleibt offen, Konflikt als Toast + Meldung)
+	await page.goto(`/?tag=${date}`);
+	await hydrated(page);
 	await page.click('.day-panel .button');
 	await expect(page.locator('dialog[open]')).toBeVisible();
 	await fillBookingForm(page, {
@@ -116,25 +128,51 @@ test('kompletter Ablauf: anlegen → Übersicht → Detail → bearbeiten → l�
 	await page.click('dialog button[type=submit]');
 	await expect(page.locator('.toast-error')).toContainText(title);
 	await expect(page.locator('dialog .form-error')).toContainText(title);
+	await page.click('dialog .button-quiet:has-text("Abbrechen")');
 
-	// Bearbeiten über den geheimen Link
-	await page.goto(editUrl);
-	await hydrated(page);
-	await page.fill('#title', `${title} (geändert)`);
-	await page.click('main form button[type=submit]');
-	await page.waitForURL('**/eintrag/*?gespeichert=1');
-	await expect(page.locator('.saved-notice')).toBeVisible();
-	await expect(page.locator('h1')).toContainText('(geändert)');
-
-	// Falscher Token wird abgelehnt
+	// Falscher Bearbeiten-Token wird weiterhin abgelehnt
 	const badResponse = await page.goto(editUrl.replace(/token=.{8}/, 'token=XXXXXXXX'));
 	expect(badResponse?.status()).toBe(403);
 
-	// Löschen
-	await page.goto(editUrl);
+	// Löschen direkt aus dem Detail-Dialog (eigener Eintrag → ohne Nachfrage)
+	await page.goto(`/?tag=${date}`);
 	await hydrated(page);
-	await page.click('summary');
-	await page.click('.button-danger');
+	await page.locator('.booking-card', { hasText: title }).click();
+	await page.click('dialog[open] button:has-text("Löschen")');
+	await page.waitForURL('**/?tag=*');
+	await expect(page.locator('.booking-card', { hasText: title })).toHaveCount(0);
+});
+
+test('fremden Eintrag löschen geht nur mit Bestätigung (Notnagel)', async ({ page }, testInfo) => {
+	const date = inDays(20);
+	const title = `Fremd ${testInfo.project.name}`;
+
+	// Anlegen
+	await page.goto(`/?tag=${date}`);
+	await hydrated(page);
+	await page.click(`.month a[href="/?tag=${date}"]`);
+	await expect(page.locator('dialog[open]')).toBeVisible();
+	await fillBookingForm(page, {
+		title,
+		startTime: '14:00',
+		endTime: '16:00',
+		name: 'Fremdine',
+		contact: '0151 4444444'
+	});
+	await page.click('dialog button[type=submit]');
+	await page.waitForURL('**/erstellt?token=*');
+
+	// Gerät „vergisst" den Eintrag → jetzt gilt er als fremd
+	await page.evaluate(() => localStorage.clear());
+
+	await page.goto(`/?tag=${date}`);
+	await hydrated(page);
+	await page.locator('.booking-card', { hasText: title }).click();
+	// Kein Bearbeiten, aber Löschen mit Bestätigung
+	await expect(page.locator('dialog[open] a', { hasText: 'Bearbeiten' })).toHaveCount(0);
+	await page.click('dialog[open] button:has-text("Eintrag löschen")');
+	await expect(page.locator('dialog[open] .confirm-text')).toContainText('Fremdine');
+	await page.click('dialog[open] button:has-text("Ja, löschen")');
 	await page.waitForURL('**/?tag=*');
 	await expect(page.locator('.booking-card', { hasText: title })).toHaveCount(0);
 });

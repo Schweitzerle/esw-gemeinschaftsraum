@@ -92,8 +92,13 @@ CI (GitHub Actions) fährt lint → check → unit → build und die E2E-Suite b
 
 ## Wie es funktioniert
 
-- **Kein Account-System:** Beim Eintragen wird ein geheimer Bearbeitungs-Link erzeugt
-  (32-Byte-Token, in der DB nur als SHA-256-Hash). Wer den Link hat, darf ändern/löschen.
+- **Kein Account-System:** Beim Eintragen erzeugt der Server ein geheimes Token
+  (32 Byte, in der DB nur als SHA-256-Hash). Dein **Gerät merkt sich dieses Token
+  automatisch** (localStorage) – deine eigenen Einträge zeigen dir darum direkt
+  „Bearbeiten"/„Löschen", ohne dass du dir etwas merken musst. Ein Link zum Bearbeiten
+  von einem anderen Gerät wird zusätzlich angeboten (einklappbar). **Löschen** darf im
+  Notfall jeder angemeldete Bewohner (mit Bestätigung), damit nie ein Eintrag hängen
+  bleibt, den niemand mehr entfernen kann – **Bearbeiten** nur, wer das Token hat.
 - **Überlappungen** verhindert der Server in einer Transaktion; die Meldung nennt den
   störenden Eintrag. Buchungen über Mitternacht sind ein Eintrag mit Ende am Folgetag.
 - **Regeln:** max. 3 Monate im Voraus, max. 12 h pro Eintrag, nicht in der Vergangenheit.

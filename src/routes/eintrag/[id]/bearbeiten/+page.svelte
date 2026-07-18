@@ -1,10 +1,17 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import BookingFormFields from '$lib/components/BookingFormFields.svelte';
+	import { rememberBooking } from '$lib/my-bookings';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let submitting = $state(false);
+
+	// Wer über den geheimen Link hier landet (z. B. anderes Gerät), dessen Gerät
+	// merkt sich den Eintrag ab jetzt ebenfalls
+	$effect(() => {
+		rememberBooking(data.bookingId, data.token);
+	});
 
 	const values = $derived(form?.values ?? data.values);
 	const fieldErrors = $derived(

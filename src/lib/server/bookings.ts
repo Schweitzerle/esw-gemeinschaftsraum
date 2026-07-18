@@ -112,6 +112,16 @@ export function deleteBooking(db: AppDb, id: number, token: string): boolean {
 	});
 }
 
+/**
+ * Löscht einen Eintrag ohne Token-Prüfung. Nur für angemeldete Bewohner
+ * gedacht (Auth-Guard sichert das ab): Notnagel, wenn jemand seinen Eintrag
+ * nicht mehr entfernen kann. Liefert true, wenn etwas gelöscht wurde.
+ */
+export function deleteBookingById(db: AppDb, id: number): boolean {
+	const result = db.delete(bookings).where(eq(bookings.id, id)).run();
+	return result.changes > 0;
+}
+
 /** Löscht Einträge, deren Ende mehr als 30 Tage zurückliegt. Liefert die Anzahl. */
 export function cleanupOldBookings(db: AppDb, nowMs: number = Date.now()): number {
 	const result = db

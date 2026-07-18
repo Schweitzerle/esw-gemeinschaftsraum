@@ -28,6 +28,7 @@ export const load: PageServerLoad = ({ params, url }) => {
 			endsAt: booking.endsAt,
 			openEnd: booking.openEnd
 		},
+		token,
 		editPath: `/eintrag/${id}/bearbeiten?token=${token}`
 	};
 };
