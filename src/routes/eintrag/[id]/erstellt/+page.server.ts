@@ -25,7 +25,8 @@ export const load: PageServerLoad = ({ params, url }) => {
 			id: booking.id,
 			title: booking.title,
 			startsAt: booking.startsAt,
-			endsAt: booking.endsAt
+			endsAt: booking.endsAt,
+			openEnd: booking.openEnd
 		},
 		editPath: `/eintrag/${id}/bearbeiten?token=${token}`
 	};

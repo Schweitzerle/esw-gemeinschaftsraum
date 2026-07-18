@@ -31,8 +31,13 @@
 		<p class="success-emoji" aria-hidden="true">🎉</p>
 		<h1>Eingetragen!</h1>
 		<p>
-			<strong>{data.booking.title}</strong> am {formatDayLong(data.booking.startsAt)} von
-			{formatTime(data.booking.startsAt)} bis {formatTime(data.booking.endsAt)} Uhr steht jetzt im Plan.
+			<strong>{data.booking.title}</strong> am {formatDayLong(data.booking.startsAt)}
+			{#if data.booking.openEnd}
+				ab {formatTime(data.booking.startsAt)} Uhr (offenes Ende) steht jetzt im Plan.
+			{:else}
+				von {formatTime(data.booking.startsAt)} bis {formatTime(data.booking.endsAt)} Uhr steht jetzt
+				im Plan.
+			{/if}
 		</p>
 
 		<div class="edit-link-box">
