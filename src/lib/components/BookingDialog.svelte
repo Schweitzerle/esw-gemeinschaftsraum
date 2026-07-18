@@ -61,6 +61,7 @@
 					return async ({ result }) => {
 						submitting = false;
 						if (result.type === 'redirect') {
+							close();
 							await goto(result.location);
 						} else if (result.type === 'failure' && result.data) {
 							values = (result.data.values as Record<string, string>) ?? values;

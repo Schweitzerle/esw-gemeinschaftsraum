@@ -1,8 +1,21 @@
 <script lang="ts">
 	import { dismissToast, toasts } from '$lib/toast.svelte';
+
+	let container = $state<HTMLElement>();
+
+	// Als Popover landen die Toasts im Top Layer — sichtbar auch ÜBER offenen
+	// <dialog>-Modalen (position:fixed allein läge darunter).
+	$effect(() => {
+		if (!container?.showPopover) return;
+		if (toasts.length > 0 && !container.matches(':popover-open')) {
+			container.showPopover();
+		} else if (toasts.length === 0 && container.matches(':popover-open')) {
+			container.hidePopover();
+		}
+	});
 </script>
 
-<div class="toasts" aria-live="polite">
+<div class="toasts" aria-live="polite" popover="manual" bind:this={container}>
 	{#each toasts as toast (toast.id)}
 		<div class="toast toast-{toast.type}" role={toast.type === 'error' ? 'alert' : 'status'}>
 			<span class="toast-icon" aria-hidden="true">{toast.type === 'error' ? '⚠️' : '✓'}</span>
@@ -25,6 +38,19 @@
 		gap: var(--space-2);
 		width: min(28rem, calc(100vw - 2 * var(--space-3)));
 		pointer-events: none;
+		/* Popover-Defaults neutralisieren (margin/border/padding/inset) */
+		margin: 0;
+		border: none;
+		padding: 0;
+		inset: var(--space-3) auto auto 50%;
+		background: transparent;
+		overflow: visible;
+	}
+
+	/* Geschlossenes Popover verstecken (Author-CSS überschreibt sonst das UA-Default).
+	   Browser ohne Popover-Support droppen diese Regel → Fallback wie bisher. */
+	.toasts:not(:popover-open) {
+		display: none;
 	}
 
 	.toast {
