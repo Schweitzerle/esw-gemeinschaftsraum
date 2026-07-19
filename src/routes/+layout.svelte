@@ -45,7 +45,7 @@
 		<header class="site-header">
 			<a href="/" class="site-title">
 				<span class="site-logo" aria-hidden="true">🛋️</span>
-				<span>Gemeinschaftsraum</span>
+				<span class="site-name">Gemeinschaftsraum</span>
 			</a>
 			<div class="header-actions">
 				{#if icsUrl}
@@ -62,12 +62,14 @@
 				<a
 					href="/neu"
 					class="button header-cta"
+					aria-label="Neuer Eintrag"
 					onclick={(e) => {
 						e.preventDefault();
 						dialog?.open(todayInBerlin());
 					}}
 				>
-					+ Eintragen
+					<span aria-hidden="true">+</span>
+					<span class="cta-label">Eintragen</span>
 				</a>
 			</div>
 		</header>
@@ -112,6 +114,7 @@
 		display: inline-flex;
 		align-items: center;
 		gap: var(--space-2);
+		min-width: 0;
 		font-family: var(--font-display);
 		font-size: var(--text-lg);
 		font-weight: 640;
@@ -121,6 +124,14 @@
 
 	.site-logo {
 		font-size: 1.5em;
+		flex-shrink: 0;
+	}
+
+	/* Titel darf im Notfall kürzen statt den Header zu sprengen */
+	.site-name {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	.header-actions {
@@ -133,6 +144,21 @@
 	.ics-button {
 		padding-inline: var(--space-3);
 		font-size: 1.1rem;
+	}
+
+	/* Auf schmalen Screens: Titel etwas kleiner, CTA nur als „+" */
+	@media (max-width: 420px) {
+		.site-title {
+			font-size: var(--text-base);
+		}
+
+		.header-cta {
+			padding-inline: var(--space-4);
+		}
+
+		.cta-label {
+			display: none;
+		}
 	}
 
 	.site-main {
