@@ -61,6 +61,16 @@ export function formatDate(ms: number): string {
 	return format(tz(ms), 'dd.MM.yyyy');
 }
 
+/** „Di" — kurzer Wochentag (für die Agenda-Datumsspalte). */
+export function formatWeekdayShort(ms: number): string {
+	return format(tz(ms), 'EEEEEE', { locale: de });
+}
+
+/** „21" — Tag im Monat ohne führende Null. */
+export function formatDayOfMonth(ms: number): string {
+	return format(tz(ms), 'd');
+}
+
 /** ISO-Datum (YYYY-MM-DD) eines Zeitpunkts in Berliner Zeit. */
 export function toBerlinDate(ms: number): string {
 	return format(tz(ms), 'yyyy-MM-dd');
