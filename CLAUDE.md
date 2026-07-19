@@ -67,10 +67,14 @@ Zentrale Bausteine und ihr Zusammenspiel:
   `<dialog>`, im Layout gemountet, per Svelte-Context `booking-dialog` geöffnet; Klick
   auf freien künftigen Tag öffnet ihn direkt mit Datum). Derselbe Dialog dient auch dem
   **Bearbeiten** (`openEdit`): „Bearbeiten" im Detail-Dialog öffnet ihn vorbefüllt und
-  postet dann an die `speichern`-Action von `/eintrag/[id]/bearbeiten` statt an `/neu`;
-  bei Erfolg kein Seitenwechsel, sondern `invalidateAll` + Toast. Context + Typen +
-  `bookingToEditValues` in `$lib/booking-dialog.ts`. Die Seiten `/neu` und
-  `/eintrag/[id]/bearbeiten` bleiben als No-JS-Fallback. Dialog-Inhalt wird nur bei
+  postet dann an die `speichern`-Action von `/eintrag/[id]/bearbeiten` statt an `/neu`.
+  **Beide Fälle enden ohne Seitenwechsel** (`invalidateAll` + Toast): Beim Erstellen liest
+  der Dialog `id`+`token` aus der Redirect-URL, merkt den Eintrag lokal (`rememberBooking`)
+  und zeigt die „Eingetragen"-Bestätigung als Toast statt zur `/erstellt`-Seite zu springen.
+  Den geheimen Bearbeiten-Link fürs andere Gerät gibt es einklappbar im `DetailDialog`
+  (nur für eigene Einträge, aus dem lokalen Token gebaut). Context + Typen +
+  `bookingToEditValues` in `$lib/booking-dialog.ts`. Die Seiten `/neu`,
+  `/eintrag/[id]/erstellt` und `/eintrag/[id]/bearbeiten` bleiben als No-JS-Fallback. Dialog-Inhalt wird nur bei
   geöffnetem Dialog gerendert (sonst doppelte Feld-IDs). Eintrag-Details öffnen als
   `DetailDialog` via Shallow Routing (`preloadData` + `pushState`, `page.state.detail`);
   `/eintrag/[id]` bleibt als Fallback/Direktlink. Datum/Uhrzeit
