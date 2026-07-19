@@ -96,13 +96,9 @@ test('kompletter Ablauf: anlegen → Übersicht → Detail → bearbeiten → l�
 	await page.click('dialog button[type=submit]');
 	await dismissRememberPopup(page);
 
-	// Erfolgsseite mit Edit-Link
-	await page.waitForURL('**/erstellt?token=*');
-	await expect(page.locator('h1')).toContainText('Eingetragen');
-	const editUrl = await page.inputValue('#edit-link');
-	expect(editUrl).toMatch(/\/eintrag\/\d+\/bearbeiten\?token=[A-Za-z0-9_-]{43}$/);
-
-	// Im Tages-Panel der Übersicht sichtbar
+	// Kein Seitenwechsel mehr: Toast + Dialog zu, Eintrag steht direkt im Kalender
+	await expect(page.locator('.toast-success')).toBeVisible();
+	await expect(page.locator('dialog[open]')).toHaveCount(0);
 	await page.goto(`/?tag=${date}`);
 	await hydrated(page);
 	await expect(page.locator('.booking-card', { hasText: title })).toBeVisible();
@@ -114,6 +110,11 @@ test('kompletter Ablauf: anlegen → Übersicht → Detail → bearbeiten → l�
 	await expect(page.locator('dialog[open]')).toContainText('komm gern dazu');
 	await expect(page).toHaveURL(/\/eintrag\/\d+/);
 	await expect(page.locator('dialog[open] button', { hasText: 'Bearbeiten' })).toBeVisible();
+
+	// Der geheime Edit-Link fürs andere Gerät steckt jetzt im Detail-Dialog
+	await page.click('dialog[open] .other-device summary');
+	const editUrl = await page.inputValue('#share-link');
+	expect(editUrl).toMatch(/\/eintrag\/\d+\/bearbeiten\?token=[A-Za-z0-9_-]{43}$/);
 
 	// Bearbeiten öffnet denselben Dialog, vorbefüllt – kein Seitenwechsel
 	await page.click('dialog[open] button:has-text("Bearbeiten")');
@@ -176,7 +177,8 @@ test('fremden Eintrag löschen geht nur mit Bestätigung (Notnagel)', async ({ p
 	});
 	await page.click('dialog button[type=submit]');
 	await dismissRememberPopup(page);
-	await page.waitForURL('**/erstellt?token=*');
+	await expect(page.locator('.toast-success')).toBeVisible();
+	await expect(page.locator('dialog[open]')).toHaveCount(0);
 
 	// Gerät „vergisst" den Eintrag → jetzt gilt er als fremd
 	await page.evaluate(() => localStorage.clear());
@@ -213,7 +215,8 @@ test('merkt Name & Kontakt nach Zustimmung und füllt sie vor', async ({ page },
 	});
 	await page.click('dialog button[type=submit]');
 	await page.click('.remember-overlay button:has-text("Ja")');
-	await page.waitForURL('**/erstellt?token=*');
+	await expect(page.locator('.toast-success')).toBeVisible();
+	await expect(page.locator('dialog[open]')).toHaveCount(0);
 
 	// Neuer Dialog an einem anderen Tag: Name & Kontakt sind vorbefüllt
 	const otherDate = inDays(26);

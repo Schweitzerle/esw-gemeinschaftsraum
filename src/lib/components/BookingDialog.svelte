@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import { enhance } from '$app/forms';
-	import { goto, invalidateAll } from '$app/navigation';
+	import { invalidateAll } from '$app/navigation';
 	import type { EditPayload } from '$lib/booking-dialog';
 	import BookingFormFields from '$lib/components/BookingFormFields.svelte';
+	import { rememberBooking } from '$lib/my-bookings';
 	import { declineIdentityThisSession, saveIdentity, shouldAskToRemember } from '$lib/my-identity';
 	import { addToast } from '$lib/toast.svelte';
 	import type { FieldErrors } from '$lib/validation/booking';
@@ -128,8 +129,18 @@
 								await invalidateAll();
 								addToast('Änderungen gespeichert.', 'success');
 							} else {
+								// Kein Seitenwechsel zur „Eingetragen"-Seite: Gerät merkt sich den
+								// Eintrag direkt aus der Redirect-URL, dann Toast + Kalender aktualisieren.
+								const target = new URL(result.location, window.location.origin);
+								const idMatch = target.pathname.match(/\/eintrag\/(\d+)\//);
+								const newId = idMatch ? Number(idMatch[1]) : NaN;
+								const token = target.searchParams.get('token');
+								if (Number.isFinite(newId) && token) {
+									rememberBooking(newId, token);
+								}
 								close();
-								await goto(result.location);
+								await invalidateAll();
+								addToast('Eingetragen – steht jetzt im Plan. ✓', 'success');
 							}
 						} else if (result.type === 'failure' && result.data) {
 							values = (result.data.values as Record<string, string>) ?? values;
