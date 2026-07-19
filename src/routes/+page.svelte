@@ -3,7 +3,13 @@
 	import { goto, preloadData, pushState } from '$app/navigation';
 	import { page } from '$app/state';
 	import DetailDialog from '$lib/components/DetailDialog.svelte';
-	import { formatDayLong, formatTime } from '$lib/time';
+	import {
+		formatDayLong,
+		formatDayOfMonth,
+		formatTime,
+		formatWeekdayShort,
+		shiftDate
+	} from '$lib/time';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -25,6 +31,12 @@
 	}
 
 	const isPastSelected = $derived(data.selected < data.today);
+
+	// „morgen" als freundlicher Anker in der Agenda (kurz genug für die Datumsspalte)
+	const tomorrow = $derived(shiftDate(data.today, 1));
+	function relativeLabel(date: string): string {
+		return date === tomorrow ? 'morgen' : '';
+	}
 
 	function timeLabel(entry: DayEntry): string {
 		const start = formatTime(entry.startsAt);
@@ -204,18 +216,41 @@
 </section>
 
 {#if data.upcoming.length > 0}
-	<section class="upcoming" aria-label="Nächste Tage">
-		<h2>Weiter geht's</h2>
-		{#each data.upcoming as day (day.date)}
-			<div class="upcoming-day">
-				<h3>{formatDayLong(day.dayStartMs)}</h3>
-				<ul class="day-bookings">
-					{#each day.entries as entry (entry.id)}
-						{@render bookingCard(entry)}
-					{/each}
-				</ul>
-			</div>
-		{/each}
+	<section class="upcoming" aria-label="Kommende Tage">
+		<h2 class="upcoming-title">Kommende Tage</h2>
+		<ol class="agenda">
+			{#each data.upcoming as day (day.date)}
+				{@const rel = relativeLabel(day.date)}
+				<li class="agenda-day">
+					<div class="agenda-date" aria-hidden="true">
+						<span class="ad-weekday">{formatWeekdayShort(day.dayStartMs)}</span>
+						<span class="ad-num">{formatDayOfMonth(day.dayStartMs)}</span>
+						{#if rel}<span class="ad-rel">{rel}</span>{/if}
+					</div>
+					<ul class="agenda-events">
+						{#each day.entries as entry (entry.id)}
+							<li>
+								<a
+									href="/eintrag/{entry.id}"
+									class="agenda-event"
+									onclick={(e) => openDetail(e, `/eintrag/${entry.id}`)}
+								>
+									<span class="ae-head">
+										<span class="ae-time">{timeLabel(entry)}</span>
+										<span class="ae-title">{entry.title}</span>
+									</span>
+									<span class="ae-meta">
+										<span class="ae-dot" class:is-public={entry.isPublic} aria-hidden="true"></span>
+										<span>{entry.isPublic ? 'Öffentlich' : 'Privat'} · {entry.name}</span>
+									</span>
+									<span class="visually-hidden">{formatDayLong(day.dayStartMs)}</span>
+								</a>
+							</li>
+						{/each}
+					</ul>
+				</li>
+			{/each}
+		</ol>
 	</section>
 {/if}
 
@@ -506,26 +541,128 @@
 	}
 
 	.upcoming {
-		margin-block-start: var(--space-6);
+		margin-block-start: var(--space-8);
 		display: grid;
-		gap: var(--space-4);
+		gap: var(--space-3);
 	}
 
-	.upcoming > h2 {
+	.upcoming-title {
 		font-size: var(--text-lg);
 	}
 
-	.upcoming-day {
+	.agenda {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+	}
+
+	.agenda-day {
+		display: grid;
+		grid-template-columns: 2.75rem 1fr;
+		gap: var(--space-3);
+		align-items: start;
+		padding-block: var(--space-3);
+	}
+
+	.agenda-day + .agenda-day {
+		border-top: 1.5px solid var(--color-border);
+	}
+
+	.agenda-date {
+		display: grid;
+		justify-items: center;
+		gap: 0;
+		padding-block-start: 2px;
+		line-height: 1.1;
+	}
+
+	.ad-weekday {
+		font-size: var(--text-sm);
+		font-weight: 800;
+		text-transform: uppercase;
+		color: var(--color-text-soft);
+	}
+
+	.ad-num {
+		font-size: var(--text-lg);
+		font-weight: 800;
+		font-variant-numeric: tabular-nums;
+		color: var(--color-text);
+	}
+
+	.ad-rel {
+		margin-block-start: 2px;
+		font-size: 0.68rem;
+		font-weight: 800;
+		text-transform: uppercase;
+		letter-spacing: 0.02em;
+		color: var(--color-accent-strong);
+	}
+
+	.agenda-events {
+		list-style: none;
+		margin: 0;
+		padding: 0;
 		display: grid;
 		gap: var(--space-2);
 	}
 
-	.upcoming-day h3 {
-		font-family: var(--font-body);
+	.agenda-event {
+		display: grid;
+		gap: 2px;
+		padding: var(--space-2) var(--space-3);
+		border-radius: var(--radius-sm);
+		background: var(--color-surface);
+		border: 1.5px solid var(--color-border);
+		text-decoration: none;
+		color: var(--color-text);
+		transition:
+			border-color var(--duration-fast) var(--ease-out),
+			background var(--duration-fast) var(--ease-out);
+	}
+
+	.agenda-event:hover {
+		border-color: var(--color-accent);
+		background: var(--color-surface-raised);
+	}
+
+	.ae-head {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: var(--space-1) var(--space-2);
+	}
+
+	.ae-time {
 		font-size: var(--text-sm);
 		font-weight: 800;
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
+		font-variant-numeric: tabular-nums;
 		color: var(--color-text-soft);
+	}
+
+	.ae-title {
+		font-weight: 700;
+		line-height: 1.25;
+	}
+
+	.ae-meta {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		font-size: var(--text-sm);
+		color: var(--color-text-soft);
+	}
+
+	.ae-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 999px;
+		background: var(--color-text-soft);
+		flex-shrink: 0;
+	}
+
+	.ae-dot.is-public {
+		background: var(--color-free);
 	}
 </style>
