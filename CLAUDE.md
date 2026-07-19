@@ -55,7 +55,10 @@ Zentrale Bausteine und ihr Zusammenspiel:
   (`session.ts`, 180 Tage). Beim Erstellen entsteht ein Edit-Token (32 Byte base64url,
   DB speichert nur SHA-256-Hash, `tokens.ts`). Das Gerät merkt sich `{id: token}` im
   localStorage (`$lib/my-bookings.ts`) → eigene Einträge zeigen im Detail-Dialog direkt
-  Bearbeiten/Löschen. **Bearbeiten** verlangt das Token (`/eintrag/[id]/bearbeiten`);
+  Bearbeiten/Löschen. Optional merkt sich das Gerät auch **Name + Kontakt**
+  (`$lib/my-identity.ts`, localStorage) — vor dem Speichern fragt ein kurzes Consent-Popup
+  im `BookingDialog`, danach werden die Felder beim nächsten Eintrag vorbefüllt. **Bearbeiten**
+  verlangt das Token (`/eintrag/[id]/bearbeiten`);
   **Löschen** darf jeder Angemeldete ohne Token (`deleteBookingById`, Auth-Guard reicht,
   Notnagel) — fremde Einträge nur nach einer Bestätigung im UI. Der ICS-Feed-Token ist
   deterministisch aus `SESSION_SECRET` abgeleitet (`ics.ts`).
@@ -72,9 +75,15 @@ Zentrale Bausteine und ihr Zusammenspiel:
   `DetailDialog` via Shallow Routing (`preloadData` + `pushState`, `page.state.detail`);
   `/eintrag/[id]` bleibt als Fallback/Direktlink. Datum/Uhrzeit
   sind eigene Komponenten (`DateField` mit nativem Input vor der Hydration,
-  `TimeSelect` im 30-min-Raster — die Vergangenheits-Kulanz ist deshalb 30 min). Leere
-  Endzeit = „offenes Ende" (`openEnd`-Spalte, 4 h reserviert). Fehler-Meldungen der
-  Actions laufen zusätzlich als Toast (`$lib/toast.svelte.ts`).
+  `TimeSelect` im 30-min-Raster — die Vergangenheits-Kulanz ist deshalb 30 min). Beide
+  Felder sind `$bindable`; `BookingFormFields` hält den Formularzustand lokal (Titel/Datum/
+  Zeit/Name/Kontakt kontrolliert — sonst leert ein Re-Render die getippten Werte) und zeigt
+  Live-Hinweise: Warnung wenn Beginn in der Vergangenheit liegt, „endet am Folgetag" wenn
+  Bis ≤ Von, sowie den Öffentlich-Zustand (rot „✕ Privat" / grün „✓ Öffentlich"). Leere
+  Endzeit = „offenes Ende" (`openEnd`-Spalte, 4 h reserviert). Unter dem Tages-Panel führt
+  die Startseite die nächsten Tage mit Einträgen fort (`upcoming` im Load, gleiche Kacheln
+  via Snippet). Fehler-Meldungen der Actions laufen zusätzlich als Toast
+  (`$lib/toast.svelte.ts`).
 - **Datensparsamkeit ist Design-Regel**: `+page.server.ts`-Loads geben nie `editTokenHash`
   oder unnötige Felder an den Client (Übersicht: kein Kontakt/Zimmer — erst die
   Detailseite zeigt Kontakt); der ICS-Feed enthält nur Titel + Zeiten.

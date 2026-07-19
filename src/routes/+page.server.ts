@@ -16,6 +16,9 @@ import type { PageServerLoad } from './$types';
 
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
+/** So viele Tage nach dem gewählten Tag zeigt die Übersicht unten fortlaufend an. */
+const UPCOMING_HORIZON_DAYS = 21;
+
 /** Nur die Felder, die die Übersicht braucht — Kontakt und Token-Hash bleiben auf dem Server. */
 function toPublicEntry(booking: Booking, dayStartMs: number, dayEndMs: number) {
 	return {
@@ -50,6 +53,24 @@ export const load: PageServerLoad = ({ url }) => {
 
 	const selectedDay = weeks.flat().find((d) => d.date === selected) ?? gridStart;
 
+	// Fortlaufende Übersicht: die nächsten Tage nach dem gewählten Tag, die Einträge
+	// haben — gleiche Kacheln wie im Tages-Panel.
+	const upcomingStartMs = berlinDateTimeToMs(shiftDate(selected, 1), '00:00');
+	const upcomingEndMs = berlinDateTimeToMs(shiftDate(selected, 1 + UPCOMING_HORIZON_DAYS), '00:00');
+	const upcomingBookings = listBookingsBetween(db, upcomingStartMs, upcomingEndMs);
+	const upcoming = [];
+	for (let offset = 1; offset <= UPCOMING_HORIZON_DAYS; offset++) {
+		const dayDate = shiftDate(selected, offset);
+		const dayStartMs = berlinDateTimeToMs(dayDate, '00:00');
+		const dayEndMs = berlinDateTimeToMs(shiftDate(dayDate, 1), '00:00');
+		const entries = upcomingBookings
+			.filter((b) => b.startsAt < dayEndMs && b.endsAt > dayStartMs)
+			.map((b) => toPublicEntry(b, dayStartMs, dayEndMs));
+		if (entries.length > 0) {
+			upcoming.push({ date: dayDate, dayStartMs, entries });
+		}
+	}
+
 	return {
 		selected,
 		today,
@@ -70,6 +91,7 @@ export const load: PageServerLoad = ({ url }) => {
 			.filter((b) => b.startsAt < selectedDay.endMs && b.endsAt > selectedDay.startMs)
 			.map((b) => toPublicEntry(b, selectedDay.startMs, selectedDay.endMs)),
 		dayStartMs: selectedDay.startMs,
+		upcoming,
 		now: {
 			current: current
 				? {

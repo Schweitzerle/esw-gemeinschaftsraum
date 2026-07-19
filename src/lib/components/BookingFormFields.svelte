@@ -1,9 +1,11 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import DateField from '$lib/components/DateField.svelte';
 	import InfoTip from '$lib/components/InfoTip.svelte';
 	import TimeSelect from '$lib/components/TimeSelect.svelte';
-	import { todayInBerlin } from '$lib/time';
-	import type { FieldErrors } from '$lib/validation/booking';
+	import { loadIdentity } from '$lib/my-identity';
+	import { berlinDateTimeToMs, formatDayLong, shiftDate, todayInBerlin } from '$lib/time';
+	import { PAST_GRACE_MS, type FieldErrors } from '$lib/validation/booking';
 
 	interface Props {
 		values: Record<string, string>;
@@ -11,6 +13,48 @@
 	}
 
 	let { values, fieldErrors }: Props = $props();
+
+	// Lokaler Zustand für die Felder, die Live-Hinweise brauchen (Datum/Zeit) bzw.
+	// vorbefüllt werden (Name/Kontakt). Titel/Beschreibung bleiben unkontrolliert.
+	// Bewusst nur der Anfangswert von `values` — der Dialog wird pro Öffnen neu gemountet.
+	// svelte-ignore state_referenced_locally
+	let title = $state(values.title ?? '');
+	// svelte-ignore state_referenced_locally
+	let date = $state(values.date ?? '');
+	// svelte-ignore state_referenced_locally
+	let startTime = $state(values.startTime ?? '');
+	// svelte-ignore state_referenced_locally
+	let endTime = $state(values.endTime ?? '');
+	// svelte-ignore state_referenced_locally
+	let name = $state(values.name ?? '');
+	// svelte-ignore state_referenced_locally
+	let contact = $state(values.contact ?? '');
+	// svelte-ignore state_referenced_locally
+	let isPublic = $state(values.isPublic === 'on');
+	// svelte-ignore state_referenced_locally
+	let description = $state(values.description ?? '');
+
+	// Neuer Eintrag ohne Name/Kontakt: mit gemerkter Identität dieses Geräts vorbefüllen
+	onMount(() => {
+		if (!name && !contact) {
+			const stored = loadIdentity();
+			if (stored) {
+				name = stored.name;
+				contact = stored.contact;
+			}
+		}
+	});
+
+	// Liegt der gewählte Beginn (Datum + Von) bereits in der Vergangenheit?
+	const startInPast = $derived(
+		Boolean(date && startTime) && berlinDateTimeToMs(date, startTime) < Date.now() - PAST_GRACE_MS
+	);
+
+	// Endzeit ≤ Startzeit ⇒ Buchung läuft über Mitternacht (endet am Folgetag)
+	const crossesMidnight = $derived(Boolean(startTime && endTime) && endTime <= startTime);
+	const nextDayLabel = $derived(
+		crossesMidnight && date ? formatDayLong(berlinDateTimeToMs(shiftDate(date, 1), '12:00')) : ''
+	);
 
 	function errorId(field: string): string | undefined {
 		return fieldErrors[field as keyof FieldErrors] ? `fehler-${field}` : undefined;
@@ -32,7 +76,7 @@
 		required
 		maxlength="80"
 		placeholder="z. B. Spieleabend, Geburtstag, Lerngruppe"
-		value={values.title ?? ''}
+		bind:value={title}
 		aria-invalid={fieldErrors.title ? 'true' : undefined}
 		aria-describedby={errorId('title')}
 	/>
@@ -45,7 +89,7 @@
 		<DateField
 			id="date"
 			name="date"
-			value={values.date ?? ''}
+			bind:value={date}
 			min={todayInBerlin()}
 			invalid={Boolean(fieldErrors.date)}
 			describedby={errorId('date')}
@@ -57,7 +101,7 @@
 		<TimeSelect
 			id="startTime"
 			name="startTime"
-			value={values.startTime ?? ''}
+			bind:value={startTime}
 			invalid={Boolean(fieldErrors.startTime)}
 			describedby={errorId('startTime')}
 		/>
@@ -73,7 +117,7 @@
 		<TimeSelect
 			id="endTime"
 			name="endTime"
-			value={values.endTime ?? ''}
+			bind:value={endTime}
 			allowEmpty
 			invalid={Boolean(fieldErrors.endTime)}
 			describedby={errorId('endTime')}
@@ -81,6 +125,17 @@
 		{@render fieldError('endTime')}
 	</div>
 </div>
+
+{#if startInPast}
+	<p class="field-hint warn" role="status">
+		⚠ Dieser Beginn liegt in der Vergangenheit – bitte wähl Datum und „Von“ neu.
+	</p>
+{/if}
+{#if crossesMidnight}
+	<p class="field-hint" role="status">
+		🌙 Endet am Folgetag{nextDayLabel ? ` (${nextDayLabel})` : ''} um {endTime} Uhr.
+	</p>
+{/if}
 
 <p class="quiet-hours">🌙 Ab 22 Uhr bitte an die Ruhezeiten im Haus denken.</p>
 
@@ -94,7 +149,7 @@
 			required
 			maxlength="50"
 			autocomplete="name"
-			value={values.name ?? ''}
+			bind:value={name}
 			aria-invalid={fieldErrors.name ? 'true' : undefined}
 			aria-describedby={errorId('name')}
 		/>
@@ -114,7 +169,7 @@
 			required
 			maxlength="100"
 			placeholder="z. B. 0151 2345678"
-			value={values.contact ?? ''}
+			bind:value={contact}
 			aria-invalid={fieldErrors.contact ? 'true' : undefined}
 			aria-describedby={errorId('contact')}
 		/>
@@ -123,18 +178,27 @@
 </div>
 
 <div class="field switch-field">
-	<span class="switch-text">
-		Öffentlich – andere dürfen dazukommen
-		<InfoTip
-			text="Öffentlich heißt: Mitbewohner sind eingeladen, spontan vorbeizuschauen. Privat heißt: ihr bleibt unter euch. Der Eintrag selbst ist immer für alle sichtbar."
-		/>
-	</span>
+	<div class="switch-info">
+		<span class="switch-text">
+			Öffentlich – andere dürfen dazukommen
+			<InfoTip
+				text="Öffentlich heißt: Mitbewohner sind eingeladen, spontan vorbeizuschauen. Privat heißt: ihr bleibt unter euch. Der Eintrag selbst ist immer für alle sichtbar."
+			/>
+		</span>
+		<span class="switch-state" class:on={isPublic} aria-hidden="true">
+			{#if isPublic}
+				✓ Öffentlich – Mitbewohner dürfen dazukommen
+			{:else}
+				✕ Privat – ihr bleibt unter euch
+			{/if}
+		</span>
+	</div>
 	<label class="switch">
 		<input
 			type="checkbox"
 			name="isPublic"
 			id="isPublic"
-			checked={values.isPublic === 'on'}
+			bind:checked={isPublic}
 			aria-label="Öffentlich – andere dürfen dazukommen"
 		/>
 		<span class="switch-track" aria-hidden="true"></span>
@@ -149,9 +213,9 @@
 		rows="3"
 		maxlength="500"
 		placeholder="z. B. was ihr vorhabt, ob man etwas mitbringen soll …"
+		bind:value={description}
 		aria-invalid={fieldErrors.description ? 'true' : undefined}
-		aria-describedby={errorId('description')}>{values.description ?? ''}</textarea
-	>
+		aria-describedby={errorId('description')}></textarea>
 	{@render fieldError('description')}
 </div>
 
@@ -182,6 +246,22 @@
 		}
 	}
 
+	.field-hint {
+		font-size: var(--text-sm);
+		font-weight: 700;
+		color: var(--color-text-soft);
+		background: var(--color-surface);
+		border: 1.5px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		padding: var(--space-2) var(--space-3);
+	}
+
+	.field-hint.warn {
+		color: var(--color-error);
+		background: var(--color-error-soft);
+		border-color: transparent;
+	}
+
 	.quiet-hours {
 		font-size: var(--text-sm);
 		color: var(--color-text-soft);
@@ -198,11 +278,27 @@
 		padding: var(--space-2) var(--space-3);
 	}
 
+	.switch-info {
+		display: grid;
+		gap: 2px;
+		min-width: 0;
+	}
+
 	.switch-text {
 		display: flex;
 		align-items: center;
 		gap: var(--space-2);
 		font-weight: 600;
+	}
+
+	.switch-state {
+		font-size: var(--text-sm);
+		font-weight: 800;
+		color: var(--color-error);
+	}
+
+	.switch-state.on {
+		color: var(--color-free);
 	}
 
 	.switch {
@@ -224,7 +320,7 @@
 		width: 3rem;
 		height: 1.7rem;
 		border-radius: 999px;
-		background: var(--color-border);
+		background: var(--color-error);
 		transition: background var(--duration-fast) var(--ease-out);
 		position: relative;
 	}
