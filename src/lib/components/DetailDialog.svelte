@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
+	import { browser } from '$app/environment';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import {
@@ -38,6 +39,25 @@
 
 	// „Gehört mir" wird aus dem localStorage dieses Geräts abgeleitet
 	const mine = $derived(isMyBooking(booking.id));
+
+	// Geheimer Bearbeiten-Link (nur für eigene Einträge) – für ein anderes Gerät
+	let copied = $state(false);
+	const editToken = $derived(mine ? tokenForBooking(booking.id) : undefined);
+	const shareUrl = $derived(
+		editToken && browser
+			? `${window.location.origin}/eintrag/${booking.id}/bearbeiten?token=${editToken}`
+			: ''
+	);
+
+	async function copyShare(): Promise<void> {
+		try {
+			await navigator.clipboard.writeText(shareUrl);
+			copied = true;
+			setTimeout(() => (copied = false), 2500);
+		} catch {
+			// Kopieren nicht möglich — Link ist markiert und kann von Hand kopiert werden
+		}
+	}
 
 	// Bearbeiten öffnet denselben Dialog wie das Erstellen, vorbefüllt — kein Seitenwechsel
 	function startEdit(): void {
@@ -149,6 +169,29 @@
 				</button>
 			{/if}
 		</form>
+
+		{#if mine && shareUrl}
+			<details class="other-device">
+				<summary>Von einem anderen Handy bearbeiten?</summary>
+				<p>
+					Andere Geräte kennen deinen Eintrag nicht. Speicher dir diesen geheimen Link (z. B. per
+					WhatsApp an dich selbst), dann kannst du ihn auch dort ändern:
+				</p>
+				<div class="edit-link-row">
+					<label class="visually-hidden" for="share-link">Dein Bearbeitungs-Link</label>
+					<input
+						id="share-link"
+						type="text"
+						readonly
+						value={shareUrl}
+						onfocus={(e) => e.currentTarget.select()}
+					/>
+					<button type="button" class="button-quiet" onclick={copyShare}>
+						{copied ? '✓ Kopiert' : 'Kopieren'}
+					</button>
+				</div>
+			</details>
+		{/if}
 
 		<footer>
 			Eingetragen am {formatDate(booking.createdAt)}.
@@ -292,5 +335,34 @@
 		padding-block-start: var(--space-3);
 		font-size: var(--text-sm);
 		color: var(--color-text-soft);
+	}
+
+	.other-device {
+		font-size: var(--text-sm);
+		color: var(--color-text-soft);
+	}
+
+	.other-device summary {
+		cursor: pointer;
+		font-weight: 700;
+		min-height: 44px;
+		display: flex;
+		align-items: center;
+	}
+
+	.other-device p {
+		margin-block: var(--space-1) var(--space-2);
+	}
+
+	.edit-link-row {
+		display: flex;
+		gap: var(--space-2);
+		flex-wrap: wrap;
+	}
+
+	.edit-link-row input {
+		flex: 1;
+		min-width: 12rem;
+		font-size: var(--text-sm);
 	}
 </style>
