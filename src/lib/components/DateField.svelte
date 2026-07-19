@@ -12,14 +12,11 @@
 		describedby?: string;
 	}
 
-	let { id, name, value, min, invalid, describedby }: Props = $props();
+	let { id, name, value = $bindable(), min, invalid, describedby }: Props = $props();
 
 	// Vor der Hydration (und ohne JS) bleibt das native Datumsfeld stehen
 	let mounted = $state(false);
 	onMount(() => (mounted = true));
-
-	// Schreibbares $derived: folgt der Prop, lokale Auswahl überschreibt bis zur nächsten Prop-Änderung
-	let selected = $derived(value);
 
 	let open = $state(false);
 	let viewDate = $state(todayInBerlin());
@@ -34,12 +31,12 @@
 	}
 
 	function toggle(): void {
-		viewDate = selected || todayInBerlin();
+		viewDate = value || todayInBerlin();
 		open = !open;
 	}
 
 	function pick(date: string): void {
-		selected = date;
+		value = date;
 		open = false;
 	}
 
@@ -61,7 +58,7 @@
 
 {#if mounted}
 	<div class="date-field" bind:this={root}>
-		<input type="hidden" {name} value={selected} />
+		<input type="hidden" {name} {value} />
 		<button
 			type="button"
 			{id}
@@ -72,7 +69,7 @@
 			aria-describedby={describedby}
 			onclick={toggle}
 		>
-			<span>{germanLabel(selected)}</span>
+			<span>{germanLabel(value)}</span>
 			<span aria-hidden="true">📅</span>
 		</button>
 
@@ -108,7 +105,7 @@
 							type="button"
 							class="cal-day"
 							class:cal-outside={!day.inMonth}
-							class:cal-selected={day.date === selected}
+							class:cal-selected={day.date === value}
 							class:cal-today={day.date === todayInBerlin()}
 							disabled={day.date < min}
 							onclick={() => pick(day.date)}
@@ -126,7 +123,8 @@
 		{id}
 		{name}
 		required
-		value={selected}
+		{value}
+		oninput={(e) => (value = e.currentTarget.value)}
 		{min}
 		aria-invalid={invalid ? 'true' : undefined}
 		aria-describedby={describedby}

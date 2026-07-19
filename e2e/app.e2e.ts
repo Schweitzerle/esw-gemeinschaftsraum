@@ -30,6 +30,17 @@ async function fillBookingForm(page: Page, data: BookingFormData): Promise<void>
 	await page.fill('#contact', data.contact);
 }
 
+/** Nach dem Absenden im Dialog erscheint evtl. die „merken?"-Nachfrage — wegklicken. */
+async function dismissRememberPopup(page: Page): Promise<void> {
+	const nein = page.locator('.remember-overlay button', { hasText: 'Nein' });
+	try {
+		await nein.waitFor({ state: 'visible', timeout: 1500 });
+		await nein.click();
+	} catch {
+		// kein Popup (z. B. unveränderte, bereits gemerkte Daten) — nichts zu tun
+	}
+}
+
 test.describe.configure({ mode: 'serial' });
 
 test.describe('ohne Anmeldung', () => {
@@ -83,6 +94,7 @@ test('kompletter Ablauf: anlegen → Übersicht → Detail → bearbeiten → l�
 	});
 	await page.check('#isPublic', { force: true });
 	await page.click('dialog button[type=submit]');
+	await dismissRememberPopup(page);
 
 	// Erfolgsseite mit Edit-Link
 	await page.waitForURL('**/erstellt?token=*');
@@ -109,6 +121,7 @@ test('kompletter Ablauf: anlegen → Übersicht → Detail → bearbeiten → l�
 	await expect(page.locator('dialog[open] #title')).toHaveValue(title);
 	await page.fill('dialog[open] #title', `${title} (geändert)`);
 	await page.click('dialog[open] button:has-text("Änderungen speichern")');
+	await dismissRememberPopup(page);
 	// Dialog schließt, Kalender bleibt, Erfolgs-Toast, geänderter Titel sichtbar
 	await expect(page.locator('dialog[open]')).toHaveCount(0);
 	await expect(page.locator('.toast-success')).toBeVisible();
@@ -127,6 +140,7 @@ test('kompletter Ablauf: anlegen → Übersicht → Detail → bearbeiten → l�
 		contact: '0000000'
 	});
 	await page.click('dialog button[type=submit]');
+	await dismissRememberPopup(page);
 	await expect(page.locator('.toast-error')).toContainText(title);
 	await expect(page.locator('dialog .form-error')).toContainText(title);
 	await page.click('dialog .button-quiet:has-text("Abbrechen")');
@@ -161,6 +175,7 @@ test('fremden Eintrag löschen geht nur mit Bestätigung (Notnagel)', async ({ p
 		contact: '0151 4444444'
 	});
 	await page.click('dialog button[type=submit]');
+	await dismissRememberPopup(page);
 	await page.waitForURL('**/erstellt?token=*');
 
 	// Gerät „vergisst" den Eintrag → jetzt gilt er als fremd
@@ -176,6 +191,45 @@ test('fremden Eintrag löschen geht nur mit Bestätigung (Notnagel)', async ({ p
 	await page.click('dialog[open] button:has-text("Ja, löschen")');
 	await page.waitForURL('**/?tag=*');
 	await expect(page.locator('.booking-card', { hasText: title })).toHaveCount(0);
+});
+
+test('merkt Name & Kontakt nach Zustimmung und füllt sie vor', async ({ page }, testInfo) => {
+	const date = inDays(25);
+	const title = `Merk ${testInfo.project.name}`;
+
+	await page.goto(`/?tag=${date}`);
+	await hydrated(page);
+	await page.evaluate(() => localStorage.clear());
+
+	// Anlegen mit Zustimmung „Ja, merken"
+	await page.click(`.month a[href="/?tag=${date}"]`);
+	await expect(page.locator('dialog[open]')).toBeVisible();
+	await fillBookingForm(page, {
+		title,
+		startTime: '08:00',
+		endTime: '09:00',
+		name: 'Merkfried',
+		contact: '0151 2223334'
+	});
+	await page.click('dialog button[type=submit]');
+	await page.click('.remember-overlay button:has-text("Ja")');
+	await page.waitForURL('**/erstellt?token=*');
+
+	// Neuer Dialog an einem anderen Tag: Name & Kontakt sind vorbefüllt
+	const otherDate = inDays(26);
+	await page.goto(`/?tag=${otherDate}`);
+	await hydrated(page);
+	await page.click(`.month a[href="/?tag=${otherDate}"]`);
+	await expect(page.locator('dialog[open] #name')).toHaveValue('Merkfried');
+	await expect(page.locator('dialog[open] #contact')).toHaveValue('0151 2223334');
+
+	// Aufräumen: eigenen Eintrag löschen (Token noch vorhanden), dann Speicher leeren
+	await page.goto(`/?tag=${date}`);
+	await hydrated(page);
+	await page.locator('.booking-card', { hasText: title }).click();
+	await page.click('dialog[open] button:has-text("Löschen")');
+	await page.waitForURL('**/?tag=*');
+	await page.evaluate(() => localStorage.clear());
 });
 
 test('funktioniert ohne JavaScript (Progressive Enhancement)', async ({ browser }, testInfo) => {

@@ -13,7 +13,7 @@
 	let {
 		id,
 		name,
-		value,
+		value = $bindable(),
 		allowEmpty = false,
 		emptyLabel = 'Offenes Ende',
 		invalid,
@@ -37,16 +37,17 @@
 	{id}
 	{name}
 	required={!allowEmpty}
+	bind:value
 	aria-invalid={invalid ? 'true' : undefined}
 	aria-describedby={describedby}
 >
 	{#if allowEmpty}
-		<option value="" selected={value === ''}>{emptyLabel}</option>
+		<option value="">{emptyLabel}</option>
 	{:else if !value}
-		<option value="" disabled selected>– wählen –</option>
+		<option value="" disabled>– wählen –</option>
 	{/if}
 	{#each options as time (time)}
-		<option value={time} selected={time === value}>{time} Uhr</option>
+		<option value={time}>{time} Uhr</option>
 	{/each}
 </select>
 

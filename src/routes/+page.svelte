@@ -13,6 +13,10 @@
 	const WEEKDAYS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 
 	interface DayEntry {
+		id: number;
+		title: string;
+		name: string;
+		isPublic: boolean;
 		openEnd: boolean;
 		startsAt: number;
 		endsAt: number;
@@ -145,6 +149,25 @@
 	{/each}
 </div>
 
+{#snippet bookingCard(entry: DayEntry)}
+	<li>
+		<a
+			href="/eintrag/{entry.id}"
+			class="booking-card"
+			onclick={(e) => openDetail(e, `/eintrag/${entry.id}`)}
+		>
+			<span class="booking-time">{timeLabel(entry)}</span>
+			<span class="booking-title">{entry.title}</span>
+			<span class="booking-meta">
+				<span>{entry.name}</span>
+				<span class="badge" class:badge-public={entry.isPublic}>
+					{entry.isPublic ? '● Öffentlich – komm dazu' : '🔒 Privat'}
+				</span>
+			</span>
+		</a>
+	</li>
+{/snippet}
+
 <section class="day-panel" aria-label="Tagesübersicht">
 	<header>
 		<h2>
@@ -174,26 +197,27 @@
 	{:else}
 		<ul class="day-bookings">
 			{#each data.dayEntries as entry (entry.id)}
-				<li>
-					<a
-						href="/eintrag/{entry.id}"
-						class="booking-card"
-						onclick={(e) => openDetail(e, `/eintrag/${entry.id}`)}
-					>
-						<span class="booking-time">{timeLabel(entry)}</span>
-						<span class="booking-title">{entry.title}</span>
-						<span class="booking-meta">
-							<span>{entry.name}</span>
-							<span class="badge" class:badge-public={entry.isPublic}>
-								{entry.isPublic ? '● Öffentlich – komm dazu' : '🔒 Privat'}
-							</span>
-						</span>
-					</a>
-				</li>
+				{@render bookingCard(entry)}
 			{/each}
 		</ul>
 	{/if}
 </section>
+
+{#if data.upcoming.length > 0}
+	<section class="upcoming" aria-label="Nächste Tage">
+		<h2>Weiter geht's</h2>
+		{#each data.upcoming as day (day.date)}
+			<div class="upcoming-day">
+				<h3>{formatDayLong(day.dayStartMs)}</h3>
+				<ul class="day-bookings">
+					{#each day.entries as entry (entry.id)}
+						{@render bookingCard(entry)}
+					{/each}
+				</ul>
+			</div>
+		{/each}
+	</section>
+{/if}
 
 {#if page.state.detail}
 	<DetailDialog booking={page.state.detail.booking} onclose={() => history.back()} />
@@ -479,5 +503,29 @@
 
 	.badge-public {
 		color: var(--color-free);
+	}
+
+	.upcoming {
+		margin-block-start: var(--space-6);
+		display: grid;
+		gap: var(--space-4);
+	}
+
+	.upcoming > h2 {
+		font-size: var(--text-lg);
+	}
+
+	.upcoming-day {
+		display: grid;
+		gap: var(--space-2);
+	}
+
+	.upcoming-day h3 {
+		font-family: var(--font-body);
+		font-size: var(--text-sm);
+		font-weight: 800;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--color-text-soft);
 	}
 </style>
