@@ -40,3 +40,7 @@ coverage
 
 # Playwright Auth-State
 playwright/.auth
+/tmpdev
+!/tmpdev/database.db
+/.direnv
+/result
