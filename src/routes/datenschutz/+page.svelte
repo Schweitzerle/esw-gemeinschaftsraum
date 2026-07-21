@@ -39,8 +39,11 @@
 	<h2>Wer betreibt die Seite?</h2>
 	<p>
 		Ein Mitbewohner hostet die Seite privat auf seinem eigenen Server in eigener Verantwortung. Es
-		gibt keine kommerziellen Interessen und keine Weitergabe von Daten an Dritte. Bei Fragen oder
-		Löschwünschen melde dich einfach in der WhatsApp-Gruppe des Hauses.
+		gibt keine kommerziellen Interessen und keine Weitergabe von Daten an Dritte.
+		<br>
+		Hannes Hofmuth
+		<br>
+		Mail: 4dqa1gtn@anonaddy.me
 	</p>
 </div>
 
