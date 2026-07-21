@@ -33,6 +33,9 @@ Alle Variablen stehen mit Beispielwerten in [`.env.example`](.env.example):
 | `ORIGIN`         | ja (Prod) | Öffentliche URL, z. B. `https://raum.example.de` — nötig für den CSRF-Schutz der Formulare |
 | `PORT`           | nein      | Default `3000`                                                                             |
 
+Statt `ORIGIN` gehen auch `PROTOCOL_HEADER`+`HOST_HEADER` — nötig, wenn **eine** Instanz
+unter **mehreren** Hostnamen erreichbar sein soll (siehe [Mehrere Hostnamen](#mehrere-hostnamen--stagingprod)).
+
 Fehlt eine Pflicht-Variable, bricht der Start mit einer klaren Fehlermeldung ab.
 
 ### Bauen & Starten (ohne Docker)
@@ -59,6 +62,48 @@ Die App erwartet, hinter einem Reverse Proxy mit **TLS** zu laufen (Caddy/nginx/
 Das Login-Cookie ist `Secure` — ohne HTTPS funktioniert der Login in Produktion nicht.
 `ORIGIN` muss auf die öffentliche URL zeigen. HSTS bitte am Proxy setzen; alle übrigen
 Security-Header (CSP, `X-Content-Type-Options`, …) setzt die App selbst.
+
+### Mehrere Hostnamen / Staging+Prod
+
+`ORIGIN` nimmt nur **einen** Wert — mehrere URLs (kommagetrennt o. ä.) gehen nicht.
+Zwei Wege, je nach Ziel:
+
+**A) Getrennte Instanzen (empfohlen für „erst testen, dann hochziehen").**
+Jede Instanz ein eigener Prozess mit eigenem `ORIGIN`, eigenem `DATABASE_PATH` und eigenem
+Port — dann sind auch die Daten getrennt und Tests auf Staging landen nicht im echten Plan:
+
+```bash
+# Staging
+ORIGIN=https://gesw-test.example.de DATABASE_PATH=data/staging.db PORT=3001 node build
+# Prod
+ORIGIN=https://gesw.example.de      DATABASE_PATH=data/prod.db    PORT=3000 node build
+```
+
+**B) Eine Instanz unter mehreren Hostnamen.** Dann `ORIGIN` **weglassen** und die Herkunft
+pro Request aus den Proxy-Headern ableiten lassen (adapter-node):
+
+```bash
+PROTOCOL_HEADER=x-forwarded-proto HOST_HEADER=x-forwarded-host node build
+```
+
+Der Proxy **muss** diese Header dann für jeden Hostnamen setzen, sonst schlägt der
+CSRF-Schutz fehl (403 beim Absenden von Formularen):
+
+```nginx
+proxy_set_header X-Forwarded-Proto $scheme;
+proxy_set_header X-Forwarded-Host  $host;
+```
+
+Caddy setzt beide per Default (`reverse_proxy` → `X-Forwarded-Proto`/`-Host`).
+
+> **Wichtig:** `PROTOCOL_HEADER`/`HOST_HEADER` nur setzen, wenn die App **ausschließlich**
+> über den eigenen Reverse Proxy erreichbar ist (Node-Port nicht öffentlich). Sonst könnte
+> ein Client die Header selbst schicken und den CSRF-Schutz aushebeln.
+
+Zu wissen: Login-Cookie und die lokal gemerkten „eigenen Einträge" hängen am Hostnamen —
+pro Host also einmal neu anmelden, und Bearbeiten-Rechte für eigene Einträge gelten nur auf
+dem Host, auf dem der Eintrag angelegt wurde (der geheime Bearbeiten-Link funktioniert
+weiterhin überall).
 
 ### Healthcheck
 

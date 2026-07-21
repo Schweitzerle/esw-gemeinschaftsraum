@@ -10,6 +10,8 @@ services:
       HAUS_PASSWORT: ${HAUS_PASSWORT:?siehe .env.example}
       SESSION_SECRET: ${SESSION_SECRET:?siehe .env.example}
       DATABASE_PATH: data/gemeinschaftsraum.db
+      # Nur EIN Hostname. Für mehrere Hostnamen pro Instanz: diese Zeile entfernen und
+      # stattdessen PROTOCOL_HEADER/HOST_HEADER setzen — siehe README („Mehrere Hostnamen").
       ORIGIN: ${ORIGIN:?z. B. https://gemeinschaftsraum.example.de}
     volumes:
       - gemeinschaftsraum-data:/app/data
