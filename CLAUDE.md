@@ -108,7 +108,9 @@ Zentrale Bausteine und ihr Zusammenspiel:
 - Lokales Dev-Testen des Logins: In-Memory-Rate-Limit (10/15 min) — Dev-Server-Neustart
   setzt es zurück.
 - ENV heißt `DATABASE_PATH` (nicht `DATABASE_URL`); hinter Reverse Proxy ist `ORIGIN`
-  Pflicht (CSRF). Alle ENV-Variablen: `.env.example`.
+  Pflicht (CSRF) und nimmt genau einen Wert — mehrere Hostnamen für eine Instanz nur per
+  `PROTOCOL_HEADER`/`HOST_HEADER` (README-Abschnitt „Mehrere Hostnamen"). Alle
+  ENV-Variablen: `.env.example`.
 - TDD ist hier etabliert: Server-Logik zuerst per Vitest (rot → grün), UI-Flows per
   Playwright. Neue Migrationen nur via `npm run db:generate` (Migrationen laufen beim
   App-Start automatisch, der Hoster führt nie drizzle-kit aus).

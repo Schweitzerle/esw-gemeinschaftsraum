@@ -50,4 +50,7 @@ Anforderungen: siehe lokale `PROMPT.md` (nicht im Repo) bzw. README.
 - `curl` ohne `Accept: text/html` bekommt von Form-Actions JSON statt 303 — normal.
 - Drizzle-Config und App lesen `DATABASE_PATH` (nicht DATABASE_URL).
 - Hinter Reverse Proxy muss `ORIGIN` gesetzt sein, sonst schlägt der CSRF-Schutz fehl.
+  `ORIGIN` kennt nur einen Wert; mehrere Hostnamen pro Instanz gehen nur über
+  `PROTOCOL_HEADER=x-forwarded-proto` + `HOST_HEADER=x-forwarded-host` (adapter-node) —
+  verifiziert: zwei Hosts je 303, fremde `Origin` weiterhin 403, fehlende Header 403.
 - E2E nutzt ein Setup-Projekt + storageState (ein Login pro Lauf); `browser.newContext()` erbt die `use`-Optionen inkl. storageState — für Nicht-eingeloggt-Tests explizit `storageState: { cookies: [], origins: [] }` setzen.
