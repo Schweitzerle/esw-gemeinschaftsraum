@@ -52,7 +52,8 @@ Zentrale Bausteine und ihr Zusammenspiel:
   in EINER Transaktion (`findConflict` mit `startsAt < end AND endsAt > start`); angrenzende
   Zeiten kollidieren nicht. Konfliktergebnis enthält den störenden Eintrag für die Meldung.
 - **Auth ohne Accounts**: ein Haus-Passwort (ENV) → HMAC-signiertes Cookie `expiry.sig`
-  (`session.ts`, 180 Tage). Beim Erstellen entsteht ein Edit-Token (32 Byte base64url,
+  (`session.ts`, 180 Tage, rollierend: `shouldRenewSession` lässt `hooks.server.ts` das
+  Cookie ab 30 Tagen Alter neu ausstellen; Cookie-Optionen nur in `issueSessionCookie`). Beim Erstellen entsteht ein Edit-Token (32 Byte base64url,
   DB speichert nur SHA-256-Hash, `tokens.ts`). Das Gerät merkt sich `{id: token}` im
   localStorage (`$lib/my-bookings.ts`) → eigene Einträge zeigen im Detail-Dialog direkt
   Bearbeiten/Löschen. Optional merkt sich das Gerät auch **Name + Kontakt**

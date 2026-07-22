@@ -31,9 +31,10 @@
 
 	<h2>Cookies &amp; Tracking</h2>
 	<p>
-		Es gibt genau ein Cookie: die Anmeldung mit dem Haus-Passwort (gültig 180 Tage). Kein Tracking,
-		keine Analyse-Tools, keine Werbung, keine externen Dienste – alle Schriften und Skripte kommen
-		von diesem Server selbst.
+		Es gibt genau ein Cookie: die Anmeldung mit dem Haus-Passwort (gültig 180 Tage, wird bei Nutzung
+		stillschweigend verlängert). Es enthält nur ein Ablaufdatum und eine Signatur – kein Passwort,
+		keine Kennung, nichts über dich. Kein Tracking, keine Analyse-Tools, keine Werbung, keine
+		externen Dienste – alle Schriften und Skripte kommen von diesem Server selbst.
 	</p>
 
 	<h2>Wer betreibt die Seite?</h2>
