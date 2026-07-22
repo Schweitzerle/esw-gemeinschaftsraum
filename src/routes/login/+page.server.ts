@@ -3,8 +3,7 @@ import { getConfig } from '$lib/server/env';
 import { loginLimiter } from '$lib/server/limiters';
 import {
 	SESSION_COOKIE,
-	SESSION_TTL_MS,
-	createSessionValue,
+	issueSessionCookie,
 	verifyPassword,
 	verifySessionValue
 } from '$lib/server/session';
@@ -42,14 +41,7 @@ export const actions: Actions = {
 			});
 		}
 
-		const expiresAtMs = Date.now() + SESSION_TTL_MS;
-		// secure überlässt SvelteKit dem Kontext: aus auf http://localhost, sonst an
-		cookies.set(SESSION_COOKIE, createSessionValue(config.sessionSecret, expiresAtMs), {
-			path: '/',
-			httpOnly: true,
-			sameSite: 'lax',
-			maxAge: SESSION_TTL_MS / 1000
-		});
+		issueSessionCookie(cookies, config.sessionSecret);
 
 		redirect(303, safeNext(url.searchParams.get('weiter')));
 	}

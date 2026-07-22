@@ -150,6 +150,12 @@ CI (GitHub Actions) fährt lint → check → unit → build und die E2E-Suite b
 - **Datensparsamkeit:** Einträge werden 30 Tage nach ihrem Ende automatisch gelöscht.
   Kein Tracking, keine externen CDNs/Fonts, ein einziges (Login-)Cookie. Details:
   `/datenschutz`.
+- **Einmal anmelden, dann Ruhe:** Das Login-Cookie gilt 180 Tage und wird bei Nutzung
+  automatisch verlängert (ab 30 Tagen Alter, `shouldRenewSession`) — wer die Seite
+  regelmäßig öffnet, tippt das Haus-Passwort nie wieder. Das Cookie ist `httpOnly` und
+  enthält nur Ablaufdatum + HMAC-Signatur, nie das Passwort selbst. Wird das
+  `HAUS_PASSWORT` geändert, bleiben bestehende Anmeldungen gültig; erst ein neues
+  `SESSION_SECRET` wirft alle Geräte raus.
 - **Rate-Limits** (in-memory): Login 10 Versuche / 15 min pro IP, Schreibaktionen 30 / min.
 - **Bedienung:** Startseite ist ein Monatskalender mit Tages-Panel. Ein Tipp auf einen
   freien (künftigen) Tag öffnet direkt den Eintragen-Dialog mit vorbefülltem Datum,

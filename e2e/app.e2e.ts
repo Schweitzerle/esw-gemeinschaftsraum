@@ -63,6 +63,26 @@ test.describe('ohne Anmeldung', () => {
 		await expect(page.locator('h1')).toContainText('Datenschutz');
 	});
 
+	test('Passwort lässt sich sichtbar schalten', async ({ page }) => {
+		await page.goto('/login');
+		await hydrated(page);
+		const feld = page.locator('#passwort');
+		const schalter = page.locator('.toggle-visibility');
+
+		await feld.fill('geheimes-haus-passwort');
+		await expect(feld).toHaveAttribute('type', 'password');
+		await expect(schalter).toHaveAttribute('aria-pressed', 'false');
+
+		await schalter.click();
+		await expect(feld).toHaveAttribute('type', 'text');
+		await expect(schalter).toHaveAttribute('aria-pressed', 'true');
+		// Der eingegebene Wert darf beim Umschalten nicht verloren gehen.
+		await expect(feld).toHaveValue('geheimes-haus-passwort');
+
+		await schalter.click();
+		await expect(feld).toHaveAttribute('type', 'password');
+	});
+
 	test('falsches Passwort zeigt Fehlermeldung', async ({ page }) => {
 		await page.goto('/login');
 		await hydrated(page);
