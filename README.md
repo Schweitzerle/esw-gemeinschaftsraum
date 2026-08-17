@@ -173,5 +173,3 @@ CI (GitHub Actions) fährt lint → check → unit → build und die E2E-Suite b
 - **Impressum:** Für eine private, nicht geschäftsmäßige Haus-Seite vermutlich nicht
   nötig (§ 5 DDG greift bei geschäftsmäßigen Diensten). Bewusst offen gelassen —
   falls die Seite mal öffentlich verlinkt wird, nochmal prüfen.
-- `npm audit` meldet Findings ausschließlich in `drizzle-kit` (Dev-Tooling, esbuild-
-  Dev-Server) — kein Runtime-Risiko, wird mit einem späteren drizzle-kit-Update verschwinden.
