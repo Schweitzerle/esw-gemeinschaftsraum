@@ -61,7 +61,7 @@ in
     };
 
     origin = mkOption {
-      type = types.str;
+      type = types.nullOr types.str;
       example = "https://buchung.example.org";
       description = ''ORIGIN-ENV- env variable.'';
     };
@@ -147,9 +147,13 @@ in
         {
           PORT = toString cfg.port;
           HOST = cfg.host;
-          ORIGIN = cfg.origin;
+          ORIGIN = mkIf (cfg.origin != null) cfg.origin;
           DATABASE_PATH = dbFullPath;
         }
+        (optionalAttrs (cfg.origin == null){
+          PROTOCOL_HEADER="x-forwarded-proto";
+          HOST_HEADER="x-forwarded-host";
+        })
         (optionalAttrs (cfg.nodeOptions != [ ]) {
           NODE_OPTIONS = lib.concatStringsSep " " cfg.nodeOptions;
         })

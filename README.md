@@ -167,9 +167,3 @@ CI (GitHub Actions) fährt lint → check → unit → build und die E2E-Suite b
   Ruhezeiten-Hinweis im Formular und ein read-only **Kalender-Abo**
   (`/kalender.ics?token=…`, Link auf der Startseite — enthält nur Titel und Zeiten,
   keine Kontaktdaten). Hell- und Dunkel-Theme folgen dem System.
-
-## Offene Punkte
-
-- **Impressum:** Für eine private, nicht geschäftsmäßige Haus-Seite vermutlich nicht
-  nötig (§ 5 DDG greift bei geschäftsmäßigen Diensten). Bewusst offen gelassen —
-  falls die Seite mal öffentlich verlinkt wird, nochmal prüfen.
